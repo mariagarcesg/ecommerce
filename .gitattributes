@@ -1,0 +1,5 @@
+# Mantener LF en scripts y SQL para que funcionen en Docker/bash en cualquier sistema
+* text=auto
+*.sh  text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
