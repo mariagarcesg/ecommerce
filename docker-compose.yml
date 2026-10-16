@@ -1,4 +1,7 @@
 services:
+  # ---------- Bases de datos ----------
+
+  # PostgreSQL: esquemas auth, ordenes y analitica
   db:
     image: postgres:16
     container_name: ecommerce-db
@@ -17,18 +20,107 @@ services:
       timeout: 3s
       retries: 10
 
-  # Plantilla por microservicio (reemplazar <servicio> y descomentar):
-  # <servicio>:
-  #   build: ./microservicios/<servicio>
+  # MongoDB: base catalogo
+  mongo:
+    image: mongo:7
+    container_name: ecommerce-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-admin}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./infra/mongo/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Redis: sesiones, tokens revocados y límite de intentos de auth
+  redis:
+    image: redis:7
+    container_name: ecommerce-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-redis}"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
+
+  # ---------- Microservicios ----------
+  # Descomentar cada uno cuando tenga su Dockerfile.
+
+  # catalogo:          # Node.js + MongoDB
+  #   build: ./microservicios/catalogo
+  #   environment:
+  #     MONGO_URL: mongodb://catalogo:catalogo@mongo:27017/catalogo
+  #     JWT_SECRET: ${JWT_SECRET}
+  #   depends_on:
+  #     mongo:
+  #       condition: service_healthy
+
+  # auth:              # Go + PostgreSQL (esquema auth) + Redis
+  #   build: ./microservicios/auth
   #   environment:
   #     DB_HOST: db
+  #     DB_PORT: 5432
   #     DB_NAME: ${POSTGRES_DB:-ecommerce}
-  #     DB_USER: <servicio>
-  #     DB_PASSWORD: <servicio>
-  #     DB_SCHEMA: <servicio>
+  #     DB_USER: auth
+  #     DB_PASSWORD: auth
+  #     DB_SCHEMA: auth
+  #     REDIS_ADDR: redis:6379
+  #     REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
+  #     JWT_SECRET: ${JWT_SECRET}
   #   depends_on:
   #     db:
   #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # ordenes:           # Java + PostgreSQL (esquema ordenes)
+  #   build: ./microservicios/ordenes
+  #   environment:
+  #     DB_HOST: db
+  #     DB_PORT: 5432
+  #     DB_NAME: ${POSTGRES_DB:-ecommerce}
+  #     DB_USER: ordenes
+  #     DB_PASSWORD: ordenes
+  #     DB_SCHEMA: ordenes
+  #     CATALOGO_URL: http://catalogo:3000
+  #     JWT_SECRET: ${JWT_SECRET}
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+
+  # analitica:         # Python + PostgreSQL (esquema analitica)
+  #   build: ./microservicios/analitica
+  #   environment:
+  #     DB_HOST: db
+  #     DB_PORT: 5432
+  #     DB_NAME: ${POSTGRES_DB:-ecommerce}
+  #     DB_USER: analitica
+  #     DB_PASSWORD: analitica
+  #     DB_SCHEMA: analitica
+  #     ORDENES_URL: http://ordenes:8080
+  #     JWT_SECRET: ${JWT_SECRET}
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+
+  # ---------- Entrada ----------
+
+  # gateway:
+  #   build: ./gateway
+  #   ports:
+  #     - "8080:80"
 
   # frontend:
   #   build: ./frontend
@@ -37,3 +129,5 @@ services:
 
 volumes:
   db-data:
+  mongo-data:
+  redis-data:

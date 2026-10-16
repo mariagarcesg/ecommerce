@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
-# Reemplaza la BD local de Docker con el contenido de infra/db/backup.sql
-# OJO: borra los datos locales de los esquemas incluidos en el backup.
+# Reemplaza las BDs locales de Docker con los backups de infra/.
+# OJO: borra los datos locales que estén incluidos en el backup.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+set -a; [ -f .env ] && . ./.env; set +a
 
-[ -f infra/db/backup.sql ] || { echo "No existe infra/db/backup.sql"; exit 1; }
-docker exec -i ecommerce-db psql -v ON_ERROR_STOP=1 -q -U admin -d ecommerce < infra/db/backup.sql > /dev/null
-echo "Backup restaurado."
+if [ -f infra/db/backup.sql ]; then
+  docker exec -i ecommerce-db psql -v ON_ERROR_STOP=1 -q -U "${POSTGRES_USER:-admin}" -d "${POSTGRES_DB:-ecommerce}" < infra/db/backup.sql > /dev/null
+  echo "PostgreSQL restaurado."
+else
+  echo "No existe infra/db/backup.sql (se omite PostgreSQL)."
+fi
+
+if [ -f infra/mongo/backup.archive ]; then
+  docker exec -i ecommerce-mongo mongorestore --quiet --drop --archive \
+    --uri "mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@localhost:27017/?authSource=admin" < infra/mongo/backup.archive
+  echo "MongoDB restaurado."
+else
+  echo "No existe infra/mongo/backup.archive (se omite MongoDB)."
+fi
