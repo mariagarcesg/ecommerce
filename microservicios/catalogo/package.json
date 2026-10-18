@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Microservicio de catálogo de productos con Express y MongoDB",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js"
