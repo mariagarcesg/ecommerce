@@ -4,6 +4,7 @@
   "description": "Microservicio de catálogo de productos con Express y MongoDB",
   "type": "module",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js"

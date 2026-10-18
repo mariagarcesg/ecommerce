@@ -1,0 +1,102 @@
+.card {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  text-align: left;
+}
+
+.card__titulo {
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.campo input {
+  padding: 10px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+}
+
+.campo input:focus {
+  outline: none;
+  border-color: var(--color-primario);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.campo input[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.campo__error {
+  min-height: 1em;
+  color: #dc2626;
+  font-size: 0.8rem;
+}
+
+.boton--bloque {
+  width: 100%;
+  padding: 10px 16px;
+}
+
+.card__pie {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-borde);
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.card__pie a {
+  color: var(--color-primario);
+  font-weight: 600;
+}
+
+.card__pie a:hover {
+  text-decoration: underline;
+}
+
+.formulario__mensaje {
+  min-height: 1.2em;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.formulario__mensaje--error {
+  color: #dc2626;
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 24px 20px;
+  }
+}

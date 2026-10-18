@@ -2,7 +2,7 @@ import { connect } from 'mongoose';
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI || 'mongodb://catalogo:catalogo@mongo:27017/catalogo?authSource=admin';
+    const mongoURI = process.env.MONGO_URI || 'mongodb://catalogo:catalogo@mongo:27017/catalogo';
     await connect(mongoURI);
     console.log('MongoDB conectado exitosamente');
   } catch (error) {
