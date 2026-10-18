@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '..', '..', '..', '.env') });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.CATALOGO_PORT || 3000;
 
 app.use(cors());
 app.use(json());
