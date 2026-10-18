@@ -58,32 +58,34 @@ services:
   # ---------- Microservicios ----------
   # Descomentar cada uno cuando tenga su Dockerfile.
 
-  # catalogo:          # Node.js + MongoDB
-  #   build: ./microservicios/catalogo
-  #   environment:
-  #     MONGO_URL: mongodb://catalogo:catalogo@mongo:27017/catalogo
-  #     JWT_SECRET: ${JWT_SECRET}
-  #   depends_on:
-  #     mongo:
-  #       condition: service_healthy
+  catalogo:          # Node.js + MongoDB
+    build: ./microservicios/catalogo
+    environment:
+      MONGO_URI: ${MONGO_URI:-mongodb://catalogo:catalogo@mongo:27017/catalogo}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${CATALOGO_PORT:-3000}
+    depends_on:
+      mongo:
+        condition: service_healthy
 
-  # auth:              # Go + PostgreSQL (esquema auth) + Redis
-  #   build: ./microservicios/auth
-  #   environment:
-  #     DB_HOST: db
-  #     DB_PORT: 5432
-  #     DB_NAME: ${POSTGRES_DB:-ecommerce}
-  #     DB_USER: auth
-  #     DB_PASSWORD: auth
-  #     DB_SCHEMA: auth
-  #     REDIS_ADDR: redis:6379
-  #     REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
-  #     JWT_SECRET: ${JWT_SECRET}
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  auth:              # Go + PostgreSQL (esquema auth) + Redis
+    build: ./microservicios/auth
+    environment:
+      PORT: 8081
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-ecommerce}
+      DB_USER: auth
+      DB_PASSWORD: auth
+      DB_SCHEMA: auth
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   # ordenes:           # Java + PostgreSQL (esquema ordenes)
   #   build: ./microservicios/ordenes
@@ -117,15 +119,19 @@ services:
 
   # ---------- Entrada ----------
 
-  # gateway:
-  #   build: ./gateway
-  #   ports:
-  #     - "8080:80"
+  # Única entrada desde el navegador: http://localhost:8080
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - frontend
+      - auth
+      - catalogo
 
-  # frontend:
-  #   build: ./frontend
-  #   ports:
-  #     - "3000:3000"
+  # Sin puerto publicado: se accede a través del gateway.
+  frontend:
+    build: ./frontend
 
 volumes:
   db-data:

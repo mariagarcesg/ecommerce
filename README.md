@@ -18,7 +18,13 @@ Frontend ──► gateway ─────┼──► auth      (Go)     ──
                           └──► analitica (Python) ──► PostgreSQL [analitica]
 ```
 
-> **Estado actual:** las carpetas de los microservicios existen pero **todavía no tienen código**. Cada equipo crea el suyo respetando las reglas de este README.
+> **Estado actual:**
+> - `auth`: registro, login, logout y `/me` funcionando (Go + PostgreSQL + Redis).
+> - `catalogo`: solo el esqueleto (`/health`).
+> - `gateway` y `frontend` (catálogo "en construcción", login y registro) funcionando.
+> - `ordenes` y `analitica`: todavía sin código.
+>
+> Cada equipo crea lo suyo respetando las reglas de este README.
 
 ## Estructura
 
@@ -55,10 +61,25 @@ Requisito: Docker Desktop abierto.
 
 ```bash
 cp .env.example .env
-docker compose up -d          # levantar
+docker compose up -d --build  # construir y levantar
+./scripts/cargar-seeds.sh     # datos de prueba (usuarios admin@test.com y cliente@test.com)
+
 docker compose down           # detener (los datos se conservan)
 docker compose down -v        # detener y BORRAR las BDs (se recrean desde cero al volver a levantar)
 ```
+
+> Usar `--build` siempre que se haga `git pull`: sin esa opción Docker reutiliza las imágenes viejas y no toma el código nuevo de los microservicios ni del frontend.
+
+La aplicación se abre en **http://localhost:8080** (gateway). Las APIs quedan en `http://localhost:8080/api/<servicio>/...`.
+
+Endpoints de `auth` (a través del gateway):
+
+| Método y ruta | Cuerpo / header | Respuesta |
+|---|---|---|
+| `POST /api/auth/registro` | `{nombre, email, password}` | `201 {token, usuario}` — crea un usuario `cliente` |
+| `POST /api/auth/login` | `{email, password}` | `200 {token, usuario}` · `401` credenciales incorrectas · `429` tras 5 fallos (15 min) |
+| `POST /api/auth/logout` | `Authorization: Bearer <token>` | `204` — revoca el token en Redis |
+| `GET /api/auth/me` | `Authorization: Bearer <token>` | `200 {id, nombre, email, rol}` · `401` si el token no es válido o fue revocado |
 
 Los scripts de `scripts/` son de bash: en Windows ejecutarlos desde **Git Bash** (ej. `./scripts/cargar-seeds.sh`).
 
@@ -149,7 +170,7 @@ Flujo normal al empezar el día:
 
 ```bash
 git pull
-docker compose up -d                 # migraciones nuevas se aplican al arrancar cada servicio
+docker compose up -d --build         # reconstruye con el código nuevo; las migraciones se aplican al arrancar cada servicio
 ./scripts/cargar-seeds.sh            # datos de prueba nuevos que hayan subido otros
 ```
 
