@@ -2,7 +2,6 @@
   "name": "catalogo-service",
   "version": "1.0.0",
   "description": "Microservicio de catálogo de productos con Express y MongoDB",
-  "type": "module",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
