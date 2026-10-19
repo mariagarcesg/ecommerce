@@ -64,6 +64,7 @@ services:
       MONGO_URI: ${MONGO_URI:-mongodb://catalogo:catalogo@mongo:27017/catalogo}
       JWT_SECRET: ${JWT_SECRET}
       PORT: ${CATALOGO_PORT:-3000}
+      CATALOGO_PORT: ${CATALOGO_PORT:-3000}
     depends_on:
       mongo:
         condition: service_healthy
