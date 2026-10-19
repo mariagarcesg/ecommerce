@@ -11,8 +11,11 @@ import { authorize } from '../middleware/authorize.js';
 
 const categoriesRouter = express.Router();
 
-categoriesRouter.get('/', authenticate, authorize('cliente', 'admin'), getCategories);
-categoriesRouter.get('/:id', authenticate, authorize('cliente', 'admin'), getCategoryById);
+// Públicas: cualquiera puede ver las categorías, con o sin sesión
+categoriesRouter.get('/', getCategories);
+categoriesRouter.get('/:id', getCategoryById);
+
+// Solo admin puede modificar
 categoriesRouter.post('/', authenticate, authorize('admin'), createCategory);
 categoriesRouter.put('/:id', authenticate, authorize('admin'), updateCategory);
 categoriesRouter.delete('/:id', authenticate, authorize('admin'), deleteCategory);

@@ -13,9 +13,12 @@ import { authorize } from '../middleware/authorize.js';
 
 const productsRouter = express.Router();
 
-productsRouter.get('/', authenticate, authorize('cliente', 'admin'), getProducts);
-productsRouter.get('/category/:categoryId', authenticate, authorize('cliente', 'admin'), getProductsByCategory);
-productsRouter.get('/:id', authenticate, authorize('cliente', 'admin'), getProductById);
+// Públicas: cualquiera puede ver los productos, con o sin sesión
+productsRouter.get('/', getProducts);
+productsRouter.get('/category/:categoryId', getProductsByCategory);
+productsRouter.get('/:id', getProductById);
+
+// Solo admin puede modificar
 productsRouter.post('/', authenticate, authorize('admin'), createProduct);
 productsRouter.put('/:id', authenticate, authorize('admin'), updateProduct);
 productsRouter.delete('/:id', authenticate, authorize('admin'), deleteProduct);

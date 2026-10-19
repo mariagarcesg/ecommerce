@@ -130,9 +130,9 @@ Base: `/categories` (o `/api/catalogo/categories` desde el gateway)
 |----------|---------|-------------------------------|----------------|
 | `GET`    | `/`     | Listar todas las categorías   | No             |
 | `GET`    | `/:id`  | Obtener una categoría por ID  | No             |
-| `POST`   | `/`     | Crear una categoría           | No*            |
-| `PUT`    | `/:id`  | Actualizar una categoría      | No*            |
-| `DELETE` | `/:id`  | Eliminar una categoría        | No*            |
+| `POST`   | `/`     | Crear una categoría           | Admin          |
+| `PUT`    | `/:id`  | Actualizar una categoría      | Admin          |
+| `DELETE` | `/:id`  | Eliminar una categoría        | Admin          |
 
 ---
 
