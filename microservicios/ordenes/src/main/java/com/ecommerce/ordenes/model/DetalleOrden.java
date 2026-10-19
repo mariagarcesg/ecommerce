@@ -2,6 +2,10 @@ package com.ecommerce.ordenes.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 @Entity
@@ -17,15 +21,21 @@ public class DetalleOrden {
     @JsonIgnore
     private Orden orden;
 
+    @NotBlank(message = "El productoId es obligatorio")
     @Column(name = "producto_id", nullable = false)
     private String productoId;
 
+    @NotBlank(message = "El productoNombre es obligatorio")
     @Column(name = "producto_nombre", nullable = false)
     private String productoNombre;
 
+    @NotNull(message = "El precioUnitario es obligatorio")
+    @DecimalMin(value = "0.0", inclusive = false, message = "El precioUnitario debe ser mayor que 0")
     @Column(name = "precio_unitario", nullable = false)
     private BigDecimal precioUnitario;
 
+    @NotNull(message = "La cantidad es obligatoria")
+    @Min(value = 1, message = "La cantidad debe ser al menos 1")
     @Column(nullable = false)
     private Integer cantidad;
 

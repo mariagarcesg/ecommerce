@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -30,6 +31,7 @@ public class Orden {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
+    @Valid
     @NotEmpty(message = "La orden debe contener al menos un detalle de producto")
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleOrden> detalles = new ArrayList<>();
