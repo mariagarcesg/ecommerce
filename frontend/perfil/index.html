@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perfil | ecommerce</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=5">
+</head>
+<body>
+  <main class="contenido">
+    <!-- perfil.js la llena con GET /api/auth/me y la muestra -->
+    <section class="perfil" id="perfil" hidden>
+      <div class="avatar avatar--grande" id="perfil-avatar" aria-hidden="true"></div>
+      <h1 class="perfil__nombre" id="perfil-nombre"></h1>
+      <span class="perfil__rol" id="perfil-rol"></span>
+
+      <dl class="perfil__datos">
+        <div class="perfil__dato">
+          <dt>Nombre</dt>
+          <dd id="dato-nombre"></dd>
+        </div>
+        <div class="perfil__dato">
+          <dt>Correo electrónico</dt>
+          <dd id="dato-email"></dd>
+        </div>
+        <div class="perfil__dato">
+          <dt>Rol</dt>
+          <dd id="dato-rol"></dd>
+        </div>
+        <div class="perfil__dato">
+          <dt>ID de usuario</dt>
+          <dd id="dato-id"></dd>
+        </div>
+      </dl>
+    </section>
+
+    <p id="perfil-error" hidden>No se pudo cargar tu perfil. Intenta de nuevo más tarde.</p>
+  </main>
+
+  <script src="../shared/layout.js?v=5"></script>
+  <script src="perfil.js"></script>
+</body>
+</html>

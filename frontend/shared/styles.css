@@ -58,6 +58,37 @@ a {
   max-width: 220px;
 }
 
+/* Círculo con las iniciales del usuario; lleva a su perfil */
+.avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primario);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+a.avatar:hover {
+  background: var(--color-primario-hover);
+}
+
+a.avatar:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+
+.avatar--grande {
+  width: 96px;
+  height: 96px;
+  font-size: 2rem;
+}
+
 [hidden] {
   display: none !important;
 }
@@ -176,4 +207,233 @@ a {
 
 .contenido p {
   color: var(--color-texto-suave);
+}
+
+/* ---------- Página con sidebar ---------- */
+.pagina {
+  flex: 1;
+  display: flex;
+}
+
+/* Sidebar: columna a la izquierda que reserva su ancho,
+   así el contenido del centro (catálogo) nunca queda tapado */
+.sidebar {
+  width: 264px;
+  flex-shrink: 0;
+  padding: 24px 0 24px 24px;
+  transition: width 0.2s;
+}
+
+/* Tarjeta alta: ocupa el alto de la pantalla y se queda fija al bajar por el catálogo */
+.sidebar__tarjeta {
+  position: sticky;
+  top: 24px;
+  height: calc(100vh - 48px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(31, 41, 51, 0.06);
+}
+
+/* Botón redondo para colapsar/expandir, pegado al borde derecho de la tarjeta */
+.sidebar__colapsar {
+  position: absolute;
+  top: 16px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-borde);
+  border-radius: 50%;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.sidebar__colapsar svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.2s;
+}
+
+/* Etiqueta de sección: chica y gris, como "Menu" en el diseño */
+.sidebar__titulo {
+  margin: 8px 8px 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #9aa5b1;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar__enlace {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 8px;
+  border-radius: var(--radio);
+  color: var(--color-texto);
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+/* Ítems que aún no navegan (ej. Dashboard) son <button>: se ven igual que los enlaces */
+button.sidebar__enlace {
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sidebar__enlace svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sidebar__enlace:hover,
+.sidebar__enlace[aria-current="page"] {
+  background: var(--color-fondo);
+  color: var(--color-primario);
+}
+
+.sidebar__enlace:focus-visible,
+.sidebar__colapsar:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+
+/* Colapsado: solo íconos, como la versión angosta del diseño */
+.sidebar--colapsado {
+  width: 96px;
+}
+
+.sidebar--colapsado .sidebar__titulo,
+.sidebar--colapsado .sidebar__texto {
+  display: none;
+}
+
+.sidebar--colapsado .sidebar__titulo + nav {
+  margin-top: 32px;
+}
+
+.sidebar--colapsado .sidebar__enlace {
+  justify-content: center;
+}
+
+.sidebar--colapsado .sidebar__colapsar svg {
+  transform: rotate(180deg);
+}
+
+/* En pantallas chicas la tarjeta pasa arriba del contenido y no se colapsa */
+@media (max-width: 640px) {
+  .pagina {
+    flex-direction: column;
+  }
+
+  .sidebar,
+  .sidebar--colapsado {
+    width: auto;
+    padding: 16px 16px 0;
+  }
+
+  .sidebar__tarjeta {
+    position: static;
+    height: auto;
+  }
+
+  .sidebar__colapsar {
+    display: none;
+  }
+
+  .sidebar--colapsado .sidebar__titulo,
+  .sidebar--colapsado .sidebar__texto {
+    display: revert;
+  }
+
+  .sidebar--colapsado .sidebar__titulo + nav {
+    margin-top: 0;
+  }
+
+  .sidebar--colapsado .sidebar__enlace {
+    justify-content: flex-start;
+  }
+}
+
+/* ---------- Perfil ---------- */
+.perfil {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(31, 41, 51, 0.06);
+}
+
+.perfil__nombre {
+  margin-top: 8px;
+  font-size: 1.5rem;
+}
+
+.perfil__rol {
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: var(--color-primario-hover);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.perfil__datos {
+  width: 100%;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.perfil__dato {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.perfil__dato dt {
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+}
+
+.perfil__dato dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
