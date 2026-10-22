@@ -62,7 +62,7 @@ services:
     build: ./microservicios/catalogo
     environment:
       MONGO_URI: ${MONGO_URI:-mongodb://catalogo:catalogo@mongo:27017/catalogo}
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
       PORT: ${CATALOGO_PORT:-3000}
       CATALOGO_PORT: ${CATALOGO_PORT:-3000}
     depends_on:
@@ -81,7 +81,7 @@ services:
       DB_SCHEMA: auth
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
     depends_on:
       db:
         condition: service_healthy
@@ -100,7 +100,7 @@ services:
       DB_PASSWORD: ordenes
       DB_SCHEMA: ordenes
       CATALOGO_URL: http://catalogo:3000
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
     depends_on:
       db:
         condition: service_healthy
@@ -131,6 +131,7 @@ services:
       - frontend
       - auth
       - catalogo
+      - ordenes
 
   # Sin puerto publicado: se accede a través del gateway.
   frontend:
