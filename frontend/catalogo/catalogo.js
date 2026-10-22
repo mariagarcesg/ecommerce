@@ -395,9 +395,9 @@
     `).join('');
   }
 
-  // Botón para forzar ejecución del análisis de afinidad Python
+  // Botón para forzar ejecución del análisis de afinidad
   document.getElementById('btn-ejecutar-python-api')?.addEventListener('click', async () => {
-    window.Notificaciones.toast('Analizando historial y matrices de afinidad con Python...', 'info');
+    window.Notificaciones.toast('Analizando historial y matrices de afinidad...', 'info');
     await new Promise(r => setTimeout(r, 600));
     generarRecomendacionesPython();
     window.Notificaciones.toast('Recomendaciones de venta cruzada actualizadas.', 'exito');

@@ -75,7 +75,7 @@
         </div>
       `).join('');
 
-      let badgeEstado = `<span class="badge-stock badge-stock--normal" style="position:static">PAGO CONFIRMADO (ACID JAVA)</span>`;
+      let badgeEstado = `<span class="badge-stock badge-stock--normal" style="position:static">PAGO CONFIRMADO</span>`;
       if (ord.estado === 'RECHAZADO') {
         badgeEstado = `<span class="badge-stock badge-stock--critico" style="position:static">TRANSACCIÓN REVERTIDA</span>`;
       }
