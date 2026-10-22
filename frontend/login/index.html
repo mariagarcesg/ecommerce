@@ -3,20 +3,33 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Iniciar sesión | ecommerce</title>
-  <link rel="stylesheet" href="../shared/styles.css?v=5">
-  <link rel="stylesheet" href="login.css">
+  <title>Iniciar Sesión | ECOMMERCE</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=6">
+  <link rel="stylesheet" href="login.css?v=6">
 </head>
 <body>
-  <main class="contenido">
+  <main class="contenido-principal" style="display:grid;place-items:center;min-height:75vh">
     <section class="card">
-      <h1 class="card__titulo">Iniciar sesión</h1>
+      <div style="text-align:center;margin-bottom:20px">
+        <span class="navbar__logo-badge" style="width:48px;height:48px;font-size:1.5rem;margin:0 auto 10px">E</span>
+        <h1 class="card__titulo">Iniciar Sesión</h1>
+        <p style="color:var(--color-texto-suave);font-size:0.88rem">Autenticación segura con Go + PostgreSQL + Redis</p>
+      </div>
+
+      <!-- Acceso Rápido Demo -->
+      <div style="background:var(--color-rojo-suave);border:1px solid var(--color-rojo-borde);border-radius:var(--radio);padding:12px;margin-bottom:18px">
+        <span style="font-size:0.75rem;font-weight:800;color:var(--color-rojo-profundo);text-transform:uppercase;display:block;margin-bottom:8px">Acceso Rápido con 1 Clic (Demo)</span>
+        <div style="display:flex;gap:8px">
+          <button class="boton boton--sm" style="flex:1" type="button" id="btn-demo-admin">Rol Admin</button>
+          <button class="boton boton--secundario boton--sm" style="flex:1" type="button" id="btn-demo-cliente">Rol Cliente</button>
+        </div>
+      </div>
 
       <form id="form-login" class="formulario" novalidate>
         <div class="campo">
           <label for="email">Correo electrónico</label>
           <input id="email" name="email" type="email" autocomplete="email"
-                 placeholder="tu@correo.com" required>
+                 placeholder="admin@test.com" required>
           <small class="campo__error" id="email-error"></small>
         </div>
 
@@ -27,7 +40,7 @@
           <small class="campo__error" id="password-error"></small>
         </div>
 
-        <button class="boton boton--bloque" type="submit">Ingresar</button>
+        <button class="boton boton--bloque" type="submit">Ingresar al Sistema</button>
         <p class="formulario__mensaje" id="mensaje" role="status"></p>
       </form>
 
@@ -35,7 +48,7 @@
     </section>
   </main>
 
-  <script src="../shared/layout.js?v=5"></script>
-  <script src="login.js"></script>
+  <script src="../shared/layout.js?v=6"></script>
+  <script src="login.js?v=6"></script>
 </body>
 </html>

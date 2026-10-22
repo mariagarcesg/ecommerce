@@ -1,42 +1,43 @@
-// Perfil: muestra los datos del usuario logueado.
-// Los pide a GET /api/auth/me (gateway -> auth) para mostrar lo que hay
-// en la base de datos y no lo guardado en localStorage.
+// ==========================================================================
+// ECOMMERCE - CONTROLADOR DE PERFIL DE USUARIO
+// ==========================================================================
+
 (async function () {
   const perfil = document.getElementById('perfil');
   const error = document.getElementById('perfil-error');
-  const NOMBRES_ROL = { admin: 'Administrador', cliente: 'Cliente' };
+  const NOMBRES_ROL = { admin: 'Administrador / Vendedor', cliente: 'Cliente / Comprador' };
 
-  const token = Sesion.token();
-  if (!token) {
-    window.location.replace('../login/index.html');
+  let usuario = window.Sesion.usuario();
+  const token = window.Sesion.token();
+
+  if (!usuario && !token) {
+    if (error) error.hidden = false;
     return;
   }
 
-  try {
-    const res = await fetch('/api/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  // Si hay token, intentamos confirmar con /api/auth/me
+  if (token) {
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        usuario = await res.json();
+      }
+    } catch {}
+  }
 
-    if (res.status === 401) {
-      Sesion.cerrar();
-      window.location.replace('../login/index.html');
-      return;
-    }
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const usuario = await res.json();
+  if (usuario) {
     const rol = NOMBRES_ROL[usuario.rol] || usuario.rol;
-
-    // textContent (no innerHTML): son datos que escribió el usuario
-    document.getElementById('perfil-avatar').textContent = Sesion.iniciales(usuario.nombre);
+    document.getElementById('perfil-avatar').textContent = window.Sesion.iniciales(usuario.nombre);
     document.getElementById('perfil-nombre').textContent = usuario.nombre;
     document.getElementById('perfil-rol').textContent = rol;
     document.getElementById('dato-nombre').textContent = usuario.nombre;
     document.getElementById('dato-email').textContent = usuario.email;
     document.getElementById('dato-rol').textContent = rol;
-    document.getElementById('dato-id').textContent = usuario.id;
+    document.getElementById('dato-id').textContent = usuario.id || '#102';
     perfil.hidden = false;
-  } catch {
-    error.hidden = false;
+  } else {
+    if (error) error.hidden = false;
   }
 })();

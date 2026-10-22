@@ -3,15 +3,93 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Catálogo | ecommerce</title>
-  <link rel="stylesheet" href="../shared/styles.css?v=5">
+  <title>Catálogo de Productos | ECOMMERCE</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=6">
 </head>
 <body>
-  <main class="contenido">
-    <h1>En construcción</h1>
-    <p>Pronto verás aquí el catálogo de productos.</p>
+
+  <main class="contenido-principal">
+    <!-- Barra de Filtros Dinámicos y Búsqueda (IDEA 04) -->
+    <section class="barra-filtros">
+      <div class="barra-filtros__superior">
+        <div class="categorias-chips" id="contenedor-chips-categorias">
+          <!-- Chips renderizados dinámicamente -->
+        </div>
+      </div>
+
+      <div class="barra-filtros__inferior">
+        <div class="filtro-precio">
+          <span>Precio:</span>
+          <input type="number" id="filtro-min-precio" placeholder="Mín $" min="0">
+          <span>—</span>
+          <input type="number" id="filtro-max-precio" placeholder="Máx $" min="0">
+        </div>
+
+        <select class="filtro-select" id="filtro-orden">
+          <option value="relevancia">Ordenar por: Relevancia</option>
+          <option value="precio-asc">Precio: Menor a Mayor</option>
+          <option value="precio-desc">Precio: Mayor a Menor</option>
+          <option value="calificacion">Mejor Valorados ★</option>
+        </select>
+
+        <label class="filtro-checkbox">
+          <input type="checkbox" id="filtro-solo-stock">
+          <span>Solo con inventario disponible</span>
+        </label>
+
+        <button class="boton boton--secundario boton--sm" id="btn-limpiar-filtros" type="button">Restablecer filtros</button>
+      </div>
+    </section>
+
+    <!-- Encabezado con conteo de resultados -->
+    <div class="catalogo-meta">
+      <h1 class="catalogo-meta__titulo" id="catalogo-titulo">Catálogo General</h1>
+      <span class="catalogo-meta__conteo" id="catalogo-conteo">Cargando productos...</span>
+    </div>
+
+    <!-- Grilla de Productos -->
+    <section class="grilla-productos" id="grilla-productos">
+      <!-- Tarjetas inyectadas por catalogo.js -->
+    </section>
+
+    <!-- ====================================================================
+         LUGAR DEDICADO PARA LA FUNCIÓN DE PYTHON (IDEA 01 - MOTOR DE RECOMENDACIONES)
+         ==================================================================== -->
+    <section class="modulo-python" id="seccion-python-recomendaciones">
+      <div class="modulo-python__cabecera">
+        <div class="modulo-python__titulo-grupo">
+          <span class="modulo-python__badge">Python + PostgreSQL</span>
+          <h2 class="modulo-python__titulo">Motor de Recomendaciones Inteligentes (Cross-Selling)</h2>
+        </div>
+        <button class="boton boton--sm" id="btn-ejecutar-python-api" type="button">
+          🔄 Ejecutar análisis de afinidad
+        </button>
+      </div>
+
+      <p class="modulo-python__desc">
+        Este módulo se conecta al microservicio <strong>Python (FastAPI + PostgreSQL [analitica])</strong> para evaluar el historial previo de compras y patrones de navegación, sugiriendo de forma inmediata productos complementarios (por ejemplo, si compras un teléfono, sugiere automáticamente su funda protectora y cargador rápido).
+      </p>
+
+      <div class="modulo-python__grilla" id="grilla-recomendaciones-python">
+        <!-- Tarjetas de recomendación inyectadas por catalogo.js -->
+      </div>
+    </section>
   </main>
 
-  <script src="../shared/layout.js?v=5"></script>
+  <!-- Modal Detalle de Producto y Reseñas (IDEA 06) -->
+  <div class="modal-backdrop" id="modal-detalle-producto">
+    <div class="modal" style="max-width: 680px;">
+      <div class="modal__cabecera">
+        <h2 class="modal__titulo" id="modal-prod-nombre">Detalle del Producto</h2>
+        <button class="drawer__cerrar" style="color:var(--color-texto)" id="btn-cerrar-modal-detalle" type="button">✕</button>
+      </div>
+      <div class="modal__cuerpo" id="modal-prod-cuerpo">
+        <!-- Contenido dinámico -->
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/layout.js?v=6"></script>
+  <script src="catalogo.js?v=6"></script>
 </body>
 </html>

@@ -3,20 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Crear cuenta | ecommerce</title>
-  <link rel="stylesheet" href="../shared/styles.css?v=5">
-  <link rel="stylesheet" href="login.css">
+  <title>Crear Cuenta | ECOMMERCE</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=6">
+  <link rel="stylesheet" href="login.css?v=6">
 </head>
 <body>
-  <main class="contenido">
+  <main class="contenido-principal" style="display:grid;place-items:center;min-height:75vh">
     <section class="card">
-      <h1 class="card__titulo">Crear cuenta</h1>
+      <div style="text-align:center;margin-bottom:20px">
+        <span class="navbar__logo-badge" style="width:48px;height:48px;font-size:1.5rem;margin:0 auto 10px">E</span>
+        <h1 class="card__titulo">Crear Cuenta</h1>
+        <p style="color:var(--color-texto-suave);font-size:0.88rem">Únete a nuestra plataforma de compras en línea</p>
+      </div>
 
       <form id="form-registro" class="formulario" novalidate>
         <div class="campo">
-          <label for="nombre">Nombre</label>
+          <label for="nombre">Nombre completo</label>
           <input id="nombre" name="nombre" type="text" autocomplete="name"
-                 placeholder="Tu nombre" required>
+                 placeholder="Ej: Pedro Pérez" required>
           <small class="campo__error" id="nombre-error"></small>
         </div>
 
@@ -28,20 +32,13 @@
         </div>
 
         <div class="campo">
-          <label for="password">Contraseña</label>
+          <label for="password">Contraseña (mínimo 8 caracteres)</label>
           <input id="password" name="password" type="password" autocomplete="new-password"
-                 placeholder="Mínimo 8 caracteres" required>
+                 placeholder="••••••••" required>
           <small class="campo__error" id="password-error"></small>
         </div>
 
-        <div class="campo">
-          <label for="confirmar">Confirmar contraseña</label>
-          <input id="confirmar" name="confirmar" type="password" autocomplete="new-password"
-                 placeholder="Repite la contraseña" required>
-          <small class="campo__error" id="confirmar-error"></small>
-        </div>
-
-        <button class="boton boton--bloque" type="submit">Registrarme</button>
+        <button class="boton boton--bloque" type="submit">Registrarse y Comenzar</button>
         <p class="formulario__mensaje" id="mensaje" role="status"></p>
       </form>
 
@@ -49,7 +46,7 @@
     </section>
   </main>
 
-  <script src="../shared/layout.js?v=5"></script>
-  <script src="registro.js"></script>
+  <script src="../shared/layout.js?v=6"></script>
+  <script src="registro.js?v=6"></script>
 </body>
 </html>

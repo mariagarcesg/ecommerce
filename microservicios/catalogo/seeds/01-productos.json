@@ -1,0 +1,98 @@
+[
+  {
+    "_id": "671600000000000000000001",
+    "name": "Smartphone Crimson Pro 256GB",
+    "price": 799.99,
+    "stock": 3,
+    "category": "671600000000000000000101",
+    "sizes": ["128GB", "256GB", "512GB"],
+    "colors": ["Rojo Carmesí", "Blanco Glaciar", "Negro Ónix"],
+    "details": ["Pantalla AMOLED 6.7\" 120Hz", "Cámara Triple 108MP", "Batería 5000mAh"],
+    "description": "Smartphone de alto rendimiento con acabado rojo mate y marco de aluminio pulido.",
+    "imagen": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&q=80"
+  },
+  {
+    "_id": "671600000000000000000002",
+    "name": "Funda Protectora Silicona Roja",
+    "price": 24.99,
+    "stock": 45,
+    "category": "671600000000000000000102",
+    "sizes": ["Pro", "Pro Max"],
+    "colors": ["Rojo Escarlata", "Blanco Nieve"],
+    "details": ["Interior microfibra suave", "Compatible MagSafe", "Bordes reforzados"],
+    "description": "Protección ultra resistente contra caídas y rayones.",
+    "imagen": "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600&q=80"
+  },
+  {
+    "_id": "671600000000000000000003",
+    "name": "Laptop Pro Ultradelgada 16\"",
+    "price": 1299.00,
+    "stock": 8,
+    "category": "671600000000000000000101",
+    "sizes": ["16GB RAM / 512GB SSD", "32GB RAM / 1TB SSD"],
+    "colors": ["Blanco Titanio", "Gris Espacial"],
+    "details": ["Procesador 12 núcleos", "Pantalla 3K Liquid Retina", "Batería 18h"],
+    "description": "Potencia gráfica y cálculo extremo en un chasis unibody ultrafino.",
+    "imagen": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80"
+  },
+  {
+    "_id": "671600000000000000000004",
+    "name": "Mouse Ergonómico Inalámbrico Silent",
+    "price": 39.99,
+    "stock": 19,
+    "category": "671600000000000000000102",
+    "sizes": ["Única"],
+    "colors": ["Rojo Rubí", "Blanco Mate"],
+    "details": ["Clicks silenciosos", "Sensor óptico 4000 DPI", "Batería USB-C"],
+    "description": "Diseño ergonómico para largas jornadas de trabajo sin fatiga.",
+    "imagen": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&q=80"
+  },
+  {
+    "_id": "671600000000000000000005",
+    "name": "Zapatillas Deportivas Runner Red",
+    "price": 89.50,
+    "stock": 4,
+    "category": "671600000000000000000103",
+    "sizes": ["38", "39", "40", "41", "42", "43"],
+    "colors": ["Rojo y Blanco", "Blanco Puro"],
+    "details": ["Amortiguación de aire", "Malla transpirable", "Plantilla ortopédica"],
+    "description": "Zapatillas ligeras diseñadas para corredores y entrenamiento.",
+    "imagen": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80"
+  },
+  {
+    "_id": "671600000000000000000006",
+    "name": "Camiseta Deportiva Transpirable Fit",
+    "price": 29.90,
+    "stock": 25,
+    "category": "671600000000000000000104",
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Blanco con franja roja", "Rojo Sólido"],
+    "details": ["Dri-Fit", "Costuras planas", "100% poliéster reciclado"],
+    "description": "Camiseta deportiva ultra cómoda que absorbe el sudor.",
+    "imagen": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&q=80"
+  },
+  {
+    "_id": "671600000000000000000007",
+    "name": "Cafetera Expreso Barista Red",
+    "price": 189.00,
+    "stock": 0,
+    "category": "671600000000000000000105",
+    "sizes": ["1.5 Litros"],
+    "colors": ["Rojo Vintage", "Blanco Retro"],
+    "details": ["20 bares de presión", "Vaporizador de leche", "Calentador de tazas"],
+    "description": "Disfruta de café con crema espesa con estilo retro italiano.",
+    "imagen": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=600&q=80"
+  },
+  {
+    "_id": "671600000000000000000008",
+    "name": "Audífonos Inalámbricos Noise Cancelling",
+    "price": 149.99,
+    "stock": 12,
+    "category": "671600000000000000000101",
+    "sizes": ["Estuche estándar"],
+    "colors": ["Blanco Puro", "Rojo Carmesí"],
+    "details": ["Cancelación activa de ruido", "36h autonomía", "Carga Qi"],
+    "description": "Audio envolvente de alta fidelidad con graves profundos.",
+    "imagen": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80"
+  }
+]
