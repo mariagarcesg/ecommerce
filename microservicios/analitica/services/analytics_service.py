@@ -21,8 +21,24 @@ JWT_SECRET = os.getenv("JWT_SECRET", "")
 
 
 # ---------------------------------------------------------------------------
+# Datos desde seeds (segun lo solicitado)
+# ---------------------------------------------------------------------------
+
+
+def obtener_cantidad_usuarios_activos() -> int:
+    """Cantidad de usuarios activos registrados en auth/seeds."""
+    return int(mock_data.contar_usuarios_activos())
+
+
+def obtener_cantidad_productos_registrados() -> int:
+    """Cantidad de productos registrados en catalogo/seeds."""
+    return int(mock_data.contar_productos_registrados())
+
+
+# ---------------------------------------------------------------------------
 # Iteracion actual (mock data)
 # ---------------------------------------------------------------------------
+
 
 def obtener_total_clientes() -> int:
     """Cantidad de clientes registrados."""
