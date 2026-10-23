@@ -95,20 +95,7 @@
         return;
       }
     } catch {
-      // Fallback inteligente para modo demo/desarrollo sin Docker
-      if (email === 'admin@test.com' && password === 'admin123') {
-        const fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibm9tYnJlIjoiQWRtaW5pc3RyYWRvciBBRE1JTiIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJyb2wiOiJhZG1pbiIsImV4cCI6MTk5OTk5OTk5OX0.sig';
-        window.Sesion.guardar(fakeToken, { id: 1, nombre: 'Administrador Tienda', email, rol: 'admin' });
-        window.Notificaciones.toast('Ingreso exitoso en modo Demo Admin.', 'exito');
-        setTimeout(() => { window.location.href = '../catalogo/index.html'; }, 500);
-        return;
-      } else if (email === 'cliente@test.com' && password === 'cliente123') {
-        const fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwibm9tYnJlIjoiQ2xpZW50ZSBQcnVlYmEiLCJlbWFpbCI6ImNsaWVudGVAdGVzdC5jb20iLCJyb2wiOiJjbGllbnRlIiwiZXhwIjoxOTk5OTk5OTk5fQ.sig';
-        window.Sesion.guardar(fakeToken, { id: 2, nombre: 'Cliente Preferencial', email, rol: 'cliente' });
-        window.Notificaciones.toast('Ingreso exitoso en modo Demo Cliente.', 'exito');
-        setTimeout(() => { window.location.href = '../catalogo/index.html'; }, 500);
-        return;
-      }
+      // Sin respuesta del servicio auth no hay sesión: nunca se crea una sesión local
       mostrarError('No se pudo conectar con el microservicio de autenticación.');
     } finally {
       boton.disabled = false;
