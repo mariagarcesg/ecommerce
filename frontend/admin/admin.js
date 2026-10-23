@@ -250,9 +250,9 @@
       const itemsStr = (ord.detalles || []).map(d => `${d.cantidad}x ${d.productoNombre}`).join(', ');
       const fecha = new Date(ord.fechaCreacion).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' });
       
-      let badgeEstado = `<span class="badge-stock badge-stock--normal" style="position:static">PAGADO (ACID)</span>`;
+      let badgeEstado = `<span class="badge-stock badge-stock--normal" style="position:static">PAGO CONFIRMADO</span>`;
       if (ord.estado === 'RECHAZADO') {
-        badgeEstado = `<span class="badge-stock badge-stock--critico" style="position:static">RECHAZADO (REV)</span>`;
+        badgeEstado = `<span class="badge-stock badge-stock--critico" style="position:static">RECHAZADO</span>`;
       }
 
       return `
@@ -325,7 +325,7 @@
   }
 
   document.getElementById('btn-refrescar-analitica')?.addEventListener('click', () => {
-    window.Notificaciones.toast('Métricas recalculadas con motor analítico de Python.', 'exito');
+    window.Notificaciones.toast('Métricas recalculadas con éxito.', 'exito');
     cargarMetricasPython();
   });
 

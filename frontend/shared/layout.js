@@ -377,7 +377,7 @@ window.Notificaciones = (function () {
       </div>
       <div class="modal__cuerpo">
         <div class="caja-info-pago">
-          <strong>Reglas de Simulación (Java Transacciones ACID):</strong>
+          <strong>Reglas de Simulación de Pago Seguro:</strong>
           • Tarjeta terminada en <strong>1234</strong>: Pago aprobado instantáneamente.<br>
           • Tarjeta terminada en <strong>0000</strong>: Pago rechazado y reversión automática sin cobro.
         </div>
@@ -585,7 +585,7 @@ window.Notificaciones = (function () {
 
     const btnSubmit = document.getElementById('btn-confirmar-pago');
     btnSubmit.disabled = true;
-    btnSubmit.textContent = 'Procesando transacción ACID en Java...';
+    btnSubmit.textContent = 'Procesando transacción segura...';
 
     await new Promise(r => setTimeout(r, 1200));
 
@@ -595,7 +595,7 @@ window.Notificaciones = (function () {
     if (tarjeta.endsWith('0000')) {
       btnSubmit.disabled = false;
       btnSubmit.textContent = 'Pagar y Confirmar Pedido';
-      window.Notificaciones.toast('❌ Pago rechazado: Tarjeta declinada. Reversión automática de fondos (Simulación ACID Java).', 'alerta');
+      window.Notificaciones.toast('❌ Pago rechazado: Tarjeta declinada. Reversión automática de fondos sin cobro.', 'alerta');
       return;
     }
 

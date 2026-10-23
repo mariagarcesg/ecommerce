@@ -70,7 +70,7 @@
     if (!valido) return;
 
     boton.disabled = true;
-    boton.textContent = 'Verificando con Go + Redis...';
+    boton.textContent = 'Verificando credenciales...';
 
     const email = campos.email.input.value.trim();
     const password = campos.password.input.value;
