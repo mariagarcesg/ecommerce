@@ -2,6 +2,7 @@
 streamlit>=1.40
 pandas>=2.2
 plotly>=5.24
+PyJWT>=2.8
 # API de recomendaciones y reportes para el frontend (main.py)
 fastapi>=0.100.0
 uvicorn>=0.20.0

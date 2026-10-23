@@ -7,9 +7,10 @@ acceso a datos vive en la interfaz.
 
 import os
 
+import jwt
 import pandas as pd
 
-from data import mock_data
+from data import mock_data, servicios
 
 # En proximas iteraciones: URL del microservicio de ordenes dentro de Docker
 # (ver docker-compose.yml -> analitica -> ORDENES_URL).
@@ -21,18 +22,18 @@ JWT_SECRET = os.getenv("JWT_SECRET", "")
 
 
 # ---------------------------------------------------------------------------
-# Datos desde seeds (segun lo solicitado)
+# Datos reales desde las APIs de auth y catalogo (None si no responden)
 # ---------------------------------------------------------------------------
 
 
-def obtener_cantidad_usuarios_activos() -> int:
-    """Cantidad de usuarios activos registrados en auth/seeds."""
-    return int(mock_data.contar_usuarios_activos())
+def obtener_cantidad_usuarios_activos() -> int | None:
+    """Cantidad de usuarios registrados en auth."""
+    return servicios.contar_usuarios_activos()
 
 
-def obtener_cantidad_productos_registrados() -> int:
-    """Cantidad de productos registrados en catalogo/seeds."""
-    return int(mock_data.contar_productos_registrados())
+def obtener_cantidad_productos_registrados() -> int | None:
+    """Cantidad de productos registrados en catalogo."""
+    return servicios.contar_productos_registrados()
 
 
 # ---------------------------------------------------------------------------
@@ -127,14 +128,18 @@ def obtener_compras_desde_api_ordenes() -> pd.DataFrame:
 
 
 def validar_token_jwt(token: str) -> dict | None:
-    """FUTURO: validar el JWT emitido por auth antes de servir reportes.
+    """Valida el JWT emitido por auth antes de servir reportes.
 
     Cada microservicio verifica la firma con el mismo JWT_SECRET y obtiene
-    id y rol del usuario sin consultar a auth. Aqui ira la libreria JWT de
-    Python decodificando y verificando la firma del token `Authorization:
-    Bearer <token>`; devuelve el payload o None si es invalido.
+    id y rol del usuario sin consultar a auth. Devuelve el payload o None si
+    el token es invalido o esta vencido.
     """
-    pass
+    if not JWT_SECRET or not token:
+        return None
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except jwt.InvalidTokenError:
+        return None
 
 
 def obtener_reporte_ventas_guardadas() -> pd.DataFrame:

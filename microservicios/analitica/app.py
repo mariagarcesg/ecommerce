@@ -60,32 +60,38 @@ st.caption("Dashboard con datos registrados en los seeds del proyecto")
 st.sidebar.header("Acerca de")
 st.sidebar.info(
     "Dashboard de reportes del e-commerce. "
-    "Muestra la cantidad de productos registrados y usuarios activos desde los seeds. "
+    "Muestra la cantidad de productos registrados y usuarios activos "
+    "consultando las APIs de catálogo y auth. "
     "A futuro se conectará a PostgreSQL (esquema analitica) "
     "y a la API de ordenes."
 )
 
 # ---------------------------------------------------------------------------
-# Metricas principales (segun seeds)
+# Metricas principales (desde las APIs de catalogo y auth)
 # ---------------------------------------------------------------------------
+
+productos = analytics_service.obtener_cantidad_productos_registrados()
+usuarios = analytics_service.obtener_cantidad_usuarios_activos()
 
 col_productos, col_usuarios = st.columns(2)
 col_productos.metric(
     "Cantidad de productos registrados",
-    analytics_service.obtener_cantidad_productos_registrados(),
+    productos if productos is not None else "No disponible",
 )
 col_usuarios.metric(
     "Cantidad de usuarios activos",
-    analytics_service.obtener_cantidad_usuarios_activos(),
+    usuarios if usuarios is not None else "No disponible",
 )
+if productos is None or usuarios is None:
+    st.warning("No se pudo consultar catálogo o auth. Revisa que esos servicios estén corriendo.")
 
 st.divider()
 
 # ---------------------------------------------------------------------------
-# Detalle desde seeds
+# Origen de los datos
 # ---------------------------------------------------------------------------
 
-with st.expander("Ver detalle de seeds utilizados"):
-    st.write("**Auth (usuarios activos):** `microservicios/auth/seeds/01-usuarios.sql`")
-    st.write("**Catálogo (productos registrados):** `microservicios/catalogo/seeds/`")
+with st.expander("Ver origen de los datos"):
+    st.write("**Auth (usuarios activos):** `GET /usuarios/total` del servicio auth")
+    st.write("**Catálogo (productos registrados):** `GET /products` del servicio catálogo")
     st.caption("Los conteos se obtienen leyendo directamente los archivos seeds del repositorio.")

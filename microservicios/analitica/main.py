@@ -5,10 +5,12 @@ Responsabilidad:
 - IDEA 08: Analítica de datos históricos, reportes de ventas y métricas para el panel admin.
 """
 
-from fastapi import FastAPI, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
 import os
+
+from services import analytics_service
 
 app = FastAPI(
     title="Ecommerce Analitica & Recomendaciones",
@@ -93,29 +95,34 @@ def obtener_recomendaciones(productoId: Optional[str] = Query(None)):
         }
     ]
 
-# IDEA 08: Reportes y Métricas Globales
+# IDEA 08: Reportes y Métricas Globales (solo admin)
+# Usa la misma capa de servicios que el dashboard Streamlit (services/analytics_service.py).
+def requerir_admin(authorization: Optional[str] = Header(None)) -> dict:
+    """Exige 'Authorization: Bearer <token>' de auth con rol admin."""
+    token = (authorization or "").removeprefix("Bearer ").strip()
+    claims = analytics_service.validar_token_jwt(token)
+    if claims is None:
+        raise HTTPException(status_code=401, detail="Sesión no válida.")
+    if claims.get("rol") != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permisos para realizar esta acción.")
+    return claims
+
+
 @app.get("/reportes")
-def obtener_reportes():
+def obtener_reportes(_admin: dict = Depends(requerir_admin)):
     """
-    Devuelve métricas consolidadas calculadas a partir del historial de ventas.
+    Métricas para el panel admin: conteos reales desde catálogo y auth
+    (None si el servicio no responde) y ventas de la capa de datos simulada.
     """
     return {
-        "ventas_totales": 2195.57,
-        "total_ordenes": 3,
-        "ticket_promedio": 731.85,
-        "tasa_conversion": 4.8,
-        "categorias": [
-            {"nombre": "Electrónica", "porcentaje": 52},
-            {"nombre": "Accesorios", "porcentaje": 24},
-            {"nombre": "Calzado & Moda", "porcentaje": 16},
-            {"nombre": "Hogar", "porcentaje": 8}
-        ],
-        "top_productos": [
-            {"nombre": "Smartphone Crimson Pro 256GB", "ventas": 142},
-            {"nombre": "Funda Protectora Silicona Roja", "ventas": 98},
-            {"nombre": "Audífonos Inalámbricos Pro", "ventas": 76},
-            {"nombre": "Zapatillas Runner Red", "ventas": 54}
-        ]
+        "productos_registrados": analytics_service.obtener_cantidad_productos_registrados(),
+        "usuarios_activos": analytics_service.obtener_cantidad_usuarios_activos(),
+        "total_compras": analytics_service.obtener_total_compras(),
+        "ingresos_totales": round(analytics_service.obtener_ingresos_totales(), 2),
+        "compras_por_mes": analytics_service.obtener_compras_por_mes().to_dict(orient="records"),
+        "productos_mas_vendidos": analytics_service.obtener_productos_mas_vendidos().to_dict(orient="records"),
+        "clientes_por_ciudad": analytics_service.obtener_clientes_por_ciudad().to_dict(orient="records"),
+        "datos_ventas_simulados": True,
     }
 
 if __name__ == "__main__":

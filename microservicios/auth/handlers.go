@@ -186,6 +186,27 @@ func (s *Servidor) me(w http.ResponseWriter, r *http.Request) {
 	responderJSON(w, http.StatusOK, u)
 }
 
+// GET /usuarios/total (Authorization: Bearer <token de admin>) -> {"total": n}.
+// Lo usa analitica para su dashboard sin acceder a la BD de auth.
+func (s *Servidor) totalUsuarios(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.validarToken(r)
+	if err != nil {
+		responderError(w, http.StatusUnauthorized, "Sesión no válida.")
+		return
+	}
+	if claims.Rol != "admin" {
+		responderError(w, http.StatusForbidden, "No tienes permisos para realizar esta acción.")
+		return
+	}
+
+	var total int
+	if err := s.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM usuarios`).Scan(&total); err != nil {
+		errorInterno(w, err)
+		return
+	}
+	responderJSON(w, http.StatusOK, map[string]int{"total": total})
+}
+
 func (s *Servidor) responderSesion(w http.ResponseWriter, status int, u Usuario) {
 	token, err := s.generarToken(u)
 	if err != nil {
