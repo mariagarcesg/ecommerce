@@ -3,6 +3,12 @@
 // ==========================================================================
 
 (function () {
+  // Solo el rol admin puede ver este panel (el backend además valida el token en cada API)
+  if (!window.Sesion.esAdmin()) {
+    window.location.replace(window.Sesion.usuario() ? '../catalogo/index.html' : '../login/index.html');
+    return;
+  }
+
   // Pestañas
   const tabCatalogo = document.getElementById('tab-btn-catalogo');
   const tabOrdenes = document.getElementById('tab-btn-ordenes');
@@ -18,6 +24,10 @@
 
     tabActivo.classList.add('chip--activo');
     panelActivo.style.display = 'block';
+
+    // La URL refleja la pestaña, para que "Reportes" del header funcione desde cualquier pestaña
+    const hash = panelActivo === panelAnalitica ? '#analitica' : '';
+    if (location.hash !== hash) history.replaceState(null, '', location.pathname + hash);
   }
 
   tabCatalogo?.addEventListener('click', () => {
@@ -269,66 +279,88 @@
   }
 
   // ---------- 3. ANALÍTICA Y ESTADÍSTICAS (Python Microservice) ----------
-  async function cargarMetricasPython() {
-    const ordenes = obtenerOrdenes();
-    const pagadas = ordenes.filter(o => o.estado === 'PAGADO');
-    const totalVentas = pagadas.reduce((acc, o) => acc + Number(o.total || 0), 0);
-    const ticketPromedio = pagadas.length > 0 ? (totalVentas / pagadas.length) : 0;
+  // GET /api/analitica/reportes (gateway -> analitica), solo con token de rol admin
+  function escapar(texto) {
+    const div = document.createElement('div');
+    div.textContent = String(texto ?? '');
+    return div.innerHTML;
+  }
 
-    document.getElementById('kpi-ventas-totales').textContent = `$${totalVentas.toFixed(2)}`;
-    document.getElementById('kpi-total-pedidos').textContent = ordenes.length;
-    document.getElementById('kpi-ticket-promedio').textContent = `$${ticketPromedio.toFixed(2)}`;
+  function pintarKpi(id, valor, formato = v => v) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = valor === null || valor === undefined ? 'No disponible' : formato(valor);
+  }
+
+  async function cargarMetricasPython() {
+    const contenedorBarras = document.getElementById('barras-categorias-analitica');
+    const listaTop = document.getElementById('lista-top-productos');
+
+    let reporte;
+    try {
+      const res = await fetch('/api/analitica/reportes', {
+        headers: { Authorization: `Bearer ${window.Sesion.token()}` }
+      });
+      if (res.status === 401 || res.status === 403) {
+        window.Notificaciones.toast('Tu sesión no tiene permisos de administrador.', 'alerta');
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      reporte = await res.json();
+    } catch {
+      ['kpi-productos', 'kpi-usuarios', 'kpi-total-compras', 'kpi-ingresos'].forEach(id => pintarKpi(id, null));
+      if (contenedorBarras) contenedorBarras.innerHTML = '<p style="color:var(--color-texto-suave)">No se pudo conectar con el microservicio de analítica.</p>';
+      if (listaTop) listaTop.innerHTML = '';
+      return;
+    }
+
+    pintarKpi('kpi-productos', reporte.productos_registrados);
+    pintarKpi('kpi-usuarios', reporte.usuarios_activos);
+    pintarKpi('kpi-total-compras', reporte.total_compras);
+    pintarKpi('kpi-ingresos', reporte.ingresos_totales, v => `$${Number(v).toFixed(2)}`);
 
     // Gráfico de barras sólido rojo y blanco (sin degradados)
-    const contenedorBarras = document.getElementById('barras-categorias-analitica');
     if (contenedorBarras) {
-      const categorias = [
-        { nombre: 'Electrónica', porcentaje: 52 },
-        { nombre: 'Accesorios', porcentaje: 24 },
-        { nombre: 'Calzado & Moda', porcentaje: 16 },
-        { nombre: 'Hogar', porcentaje: 8 }
-      ];
-
-      contenedorBarras.innerHTML = categorias.map(c => `
+      const meses = reporte.compras_por_mes || [];
+      const maximo = Math.max(1, ...meses.map(m => m.compras));
+      contenedorBarras.innerHTML = meses.map(m => `
         <div>
           <div style="display:flex;justify-content:space-between;font-size:0.85rem;font-weight:700;margin-bottom:4px">
-            <span>${c.nombre}</span>
-            <span style="color:var(--color-rojo-principal)">${c.porcentaje}%</span>
+            <span>${escapar(m.mes)}</span>
+            <span style="color:var(--color-rojo-principal)">${m.compras} compras</span>
           </div>
           <div style="height:10px;background:#E5E7EB;border-radius:4px;overflow:hidden">
-            <div style="height:100%;width:${c.porcentaje}%;background-color:var(--color-rojo-principal);border-radius:4px"></div>
+            <div style="height:100%;width:${(m.compras / maximo) * 100}%;background-color:var(--color-rojo-principal);border-radius:4px"></div>
           </div>
         </div>
       `).join('');
     }
 
-    // Top productos según motor analítico
-    const listaTop = document.getElementById('lista-top-productos');
     if (listaTop) {
-      const tops = [
-        { nombre: 'Smartphone Crimson Pro 256GB', ventas: 142, tag: 'Más vendido' },
-        { nombre: 'Funda Protectora Silicona Roja', ventas: 98, tag: 'Mayor cross-sell' },
-        { nombre: 'Audífonos Inalámbricos Pro', ventas: 76, tag: 'Alta conversión' },
-        { nombre: 'Zapatillas Runner Red', ventas: 54, tag: 'Tendencia al alza' }
-      ];
-
-      listaTop.innerHTML = tops.map((t, idx) => `
+      listaTop.innerHTML = (reporte.productos_mas_vendidos || []).map((t, idx) => `
         <li style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--color-blanco);border:1px solid var(--color-borde);border-radius:var(--radio-sm)">
           <div style="display:flex;align-items:center;gap:10px">
             <span style="display:grid;place-items:center;width:24px;height:24px;background:var(--color-rojo-suave);color:var(--color-rojo-principal);font-weight:900;border-radius:50%;font-size:0.75rem">${idx + 1}</span>
-            <span style="font-weight:700;font-size:0.9rem">${t.nombre}</span>
+            <span style="font-weight:700;font-size:0.9rem">${escapar(t.producto)}</span>
           </div>
-          <span class="chip" style="font-size:0.75rem;padding:2px 8px;border-color:var(--color-rojo-principal);color:var(--color-rojo-principal)">${t.ventas} ventas</span>
+          <span class="chip" style="font-size:0.75rem;padding:2px 8px;border-color:var(--color-rojo-principal);color:var(--color-rojo-principal)">${t.unidades} uds.</span>
         </li>
       `).join('');
     }
   }
 
   document.getElementById('btn-refrescar-analitica')?.addEventListener('click', () => {
-    window.Notificaciones.toast('Métricas recalculadas con éxito.', 'exito');
     cargarMetricasPython();
   });
 
-  // Inicialización
-  cargarTablaProductos();
+  // Inicialización: el botón "Reportes" del header abre directo la pestaña de analítica
+  function abrirPestanaSegunHash() {
+    if (location.hash === '#analitica') {
+      activarTab(tabAnalitica, panelAnalitica);
+      cargarMetricasPython();
+    } else {
+      cargarTablaProductos();
+    }
+  }
+  window.addEventListener('hashchange', abrirPestanaSegunHash);
+  abrirPestanaSegunHash();
 })();

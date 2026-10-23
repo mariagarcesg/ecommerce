@@ -249,6 +249,7 @@ window.Notificaciones = (function () {
   const iconoSalir = `<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`;
   const iconoOrdenes = `<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3h6v1"></path><line x1="9" y1="10" x2="15" y2="10"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>`;
   const iconoAdmin = `<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-6h2zm0-8h-2V7h2z"></path></svg>`;
+  const iconoReportes = `<svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20"></line><rect x="6" y="11" width="3" height="7"></rect><rect x="11" y="6" width="3" height="12"></rect><rect x="16" y="13" width="3" height="5"></rect></svg>`;
   const iconoCerrar = `<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
   // Banner Promocional Cupón PROFE20
@@ -304,6 +305,10 @@ window.Notificaciones = (function () {
 
       <a class="icono-boton" id="btn-nav-admin" data-solo-admin href="../admin/index.html" hidden title="Panel de Administración">
         ${iconoAdmin}
+      </a>
+
+      <a class="icono-boton" id="btn-nav-reportes" data-solo-admin href="../admin/index.html#analitica" hidden title="Reportes">
+        ${iconoReportes}
       </a>
 
       <!-- Avatar o Login -->
@@ -668,6 +673,7 @@ window.Notificaciones = (function () {
     const btnLogin = document.getElementById('btn-nav-login');
     const btnLogout = document.getElementById('btn-nav-logout');
     const btnAdmin = document.getElementById('btn-nav-admin');
+    const btnReportes = document.getElementById('btn-nav-reportes');
 
     if (usuario) {
       if (saludo) {
@@ -681,12 +687,14 @@ window.Notificaciones = (function () {
       if (btnLogin) btnLogin.hidden = true;
       if (btnLogout) btnLogout.hidden = false;
       if (btnAdmin) btnAdmin.hidden = !esAdmin;
+      if (btnReportes) btnReportes.hidden = !esAdmin;
     } else {
       if (saludo) saludo.hidden = true;
       if (avatar) avatar.hidden = true;
       if (btnLogin) btnLogin.hidden = false;
       if (btnLogout) btnLogout.hidden = true;
       if (btnAdmin) btnAdmin.hidden = true;
+      if (btnReportes) btnReportes.hidden = true;
     }
   }
 
