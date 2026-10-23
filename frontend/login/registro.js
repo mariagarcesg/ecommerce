@@ -79,7 +79,7 @@
         body: JSON.stringify({
           nombre: campos.nombre.input.value.trim(),
           email: campos.email.input.value.trim(),
-          password: password.value.trim(),
+          password: password.value, // sin trim: el login la envía tal cual
         }),
       });
       const datos = await res.json().catch(() => ({}));
