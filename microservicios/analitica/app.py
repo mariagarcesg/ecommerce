@@ -16,111 +16,76 @@ st.set_page_config(
     layout="wide",
 )
 
+# Colores unificados con el frontend
+COLOR_PRIMARIO = "#2563eb"
+COLOR_FONDO = "#f6f7f9"
+COLOR_SUPERFICIE = "#ffffff"
+COLOR_TEXTO = "#1f2933"
+COLOR_TEXTO_SUAVE = "#616e7c"
+COLOR_BORDE = "#e4e7eb"
+
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        background-color: {COLOR_FONDO};
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: {COLOR_SUPERFICIE};
+        border-right: 1px solid {COLOR_BORDE};
+    }}
+    h1, h2, h3 {{
+        color: {COLOR_TEXTO};
+    }}
+    .stMetric {{
+        background-color: {COLOR_SUPERFICIE};
+        border: 1px solid {COLOR_BORDE};
+        padding: 1rem;
+        border-radius: 8px;
+    }}
+    [data-testid="stMetricLabel"] {{
+        color: {COLOR_TEXTO_SUAVE};
+    }}
+    [data-testid="stMetricValue"] {{
+        color: {COLOR_TEXTO};
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.title("Panel de Analitica")
-st.caption("Primera iteración · datos simulados (mock data)")
+st.caption("Dashboard con datos registrados en los seeds del proyecto")
 
 st.sidebar.header("Acerca de")
 st.sidebar.info(
     "Dashboard de reportes del e-commerce. "
-    "En esta iteración los datos provienen de data/mock_data.py; "
-    "a futuro se conectará a PostgreSQL (esquema analitica) "
+    "Muestra la cantidad de productos registrados y usuarios activos desde los seeds. "
+    "A futuro se conectará a PostgreSQL (esquema analitica) "
     "y a la API de ordenes."
 )
 
 # ---------------------------------------------------------------------------
-# Metricas principales
+# Metricas principales (segun seeds)
 # ---------------------------------------------------------------------------
 
-col_clientes, col_compras, col_ingresos = st.columns(3)
-col_clientes.metric("Clientes registrados", analytics_service.obtener_total_clientes())
-col_compras.metric("Compras realizadas", analytics_service.obtener_total_compras())
-col_ingresos.metric(
-    "Ingresos (compras completadas)",
-    f"${analytics_service.obtener_ingresos_totales():,.2f}",
+col_productos, col_usuarios = st.columns(2)
+col_productos.metric(
+    "Cantidad de productos registrados",
+    analytics_service.obtener_cantidad_productos_registrados(),
+)
+col_usuarios.metric(
+    "Cantidad de usuarios activos",
+    analytics_service.obtener_cantidad_usuarios_activos(),
 )
 
 st.divider()
 
 # ---------------------------------------------------------------------------
-# Clientes registrados (torta)
+# Detalle desde seeds
 # ---------------------------------------------------------------------------
 
-st.subheader("Clientes registrados por ciudad")
-clientes_ciudad = analytics_service.obtener_clientes_por_ciudad()
-fig_clientes = px.pie(
-    clientes_ciudad,
-    names="ciudad",
-    values="clientes",
-    hole=0.4,
-    color_discrete_sequence=px.colors.qualitative.Set2,
-)
-fig_clientes.update_traces(textposition="inside", textinfo="percent+label+value")
-fig_clientes.update_layout(showlegend=False, margin=dict(t=10, b=10, l=10, r=10))
-st.plotly_chart(fig_clientes, use_container_width=True)
-
-# ---------------------------------------------------------------------------
-# Compras realizadas (barras)
-# ---------------------------------------------------------------------------
-
-st.subheader("Compras realizadas por mes")
-compras_mes = analytics_service.obtener_compras_por_mes()
-fig_compras = px.bar(
-    compras_mes,
-    x="mes",
-    y="compras",
-    text="compras",
-    color="compras",
-    color_continuous_scale="Blues",
-)
-fig_compras.update_traces(textposition="outside")
-fig_compras.update_layout(
-    showlegend=False,
-    coloraxis_showscale=False,
-    xaxis_title="Mes",
-    yaxis_title="Compras",
-    yaxis=dict(dtick=1),
-    margin=dict(t=10, b=10, l=10, r=10),
-)
-st.plotly_chart(fig_compras, use_container_width=True)
-
-# ---------------------------------------------------------------------------
-# Productos mas vendidos (barras horizontales)
-# ---------------------------------------------------------------------------
-
-st.subheader("Productos más vendidos (unidades)")
-productos = analytics_service.obtener_productos_mas_vendidos()
-fig_productos = px.bar(
-    productos.sort_values("unidades", ascending=True),
-    x="unidades",
-    y="producto",
-    orientation="h",
-    text="unidades",
-    color="unidades",
-    color_continuous_scale="Greens",
-)
-fig_productos.update_traces(textposition="outside")
-fig_productos.update_layout(
-    showlegend=False,
-    coloraxis_showscale=False,
-    xaxis_title="Unidades vendidas",
-    yaxis_title="",
-    xaxis=dict(dtick=1),
-    margin=dict(t=10, b=10, l=10, r=10),
-)
-st.plotly_chart(fig_productos, use_container_width=True)
-
-# ---------------------------------------------------------------------------
-# Datos en crudo (capa data) para inspeccion
-# ---------------------------------------------------------------------------
-
-with st.expander("Ver datos simulados"):
-    crudos = analytics_service.obtener_dataframes_crudos()
-    tab_clientes, tab_compras, tab_detalle = st.tabs(
-        ["Clientes", "Compras", "Detalle de compras"]
-    )
-    with tab_clientes:
-        st.dataframe(crudos["clientes"], use_container_width=True)
-    with tab_compras:
-        st.dataframe(crudos["compras"], use_container_width=True)
-    with tab_detalle:
-        st.dataframe(crudos["detalle"], use_container_width=True)
+with st.expander("Ver detalle de seeds utilizados"):
+    st.write("**Auth (usuarios activos):** `microservicios/auth/seeds/01-usuarios.sql`")
+    st.write("**Catálogo (productos registrados):** `microservicios/catalogo/seeds/`")
+    st.caption("Los conteos se obtienen leyendo directamente los archivos seeds del repositorio.")
