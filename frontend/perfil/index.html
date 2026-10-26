@@ -3,16 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Perfil | ecommerce</title>
-  <link rel="stylesheet" href="../shared/styles.css?v=5">
+  <title>Mi Perfil | ECOMMERCE</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=6">
 </head>
 <body>
-  <main class="contenido">
-    <!-- perfil.js la llena con GET /api/auth/me y la muestra -->
-    <section class="perfil" id="perfil" hidden>
+  <main class="contenido-principal" style="display:grid;place-items:center;min-height:75vh">
+    <section class="perfil" id="perfil" style="border-top:5px solid var(--color-rojo-principal)" hidden>
       <div class="avatar avatar--grande" id="perfil-avatar" aria-hidden="true"></div>
       <h1 class="perfil__nombre" id="perfil-nombre"></h1>
-      <span class="perfil__rol" id="perfil-rol"></span>
+      <span class="badge-stock badge-stock--critico" id="perfil-rol" style="position:static"></span>
 
       <dl class="perfil__datos">
         <div class="perfil__dato">
@@ -24,20 +23,30 @@
           <dd id="dato-email"></dd>
         </div>
         <div class="perfil__dato">
-          <dt>Rol</dt>
+          <dt>Rol de Acceso</dt>
           <dd id="dato-rol"></dd>
         </div>
         <div class="perfil__dato">
-          <dt>ID de usuario</dt>
+          <dt>Identificador (ID)</dt>
           <dd id="dato-id"></dd>
         </div>
       </dl>
+
+      <div style="display:flex;gap:10px;width:100%;margin-top:20px">
+        <a class="boton boton--secundario boton--sm" style="flex:1" href="../ordenes/index.html">Mis Pedidos</a>
+        <a class="boton boton--sm" style="flex:1" href="../catalogo/index.html">Ir a Comprar</a>
+      </div>
     </section>
 
-    <p id="perfil-error" hidden>No se pudo cargar tu perfil. Intenta de nuevo más tarde.</p>
+    <div id="perfil-error" hidden style="text-align:center;padding:40px;background:var(--color-blanco);border-radius:var(--radio-lg);border:1px solid var(--color-borde)">
+      <p style="font-size:2rem;margin-bottom:8px">🔒</p>
+      <h3 style="font-weight:800;color:var(--color-texto)">Debes iniciar sesión</h3>
+      <p style="color:var(--color-texto-suave);margin-top:4px">Para ver tu perfil de usuario, ingresa a tu cuenta.</p>
+      <a class="boton boton--sm" style="margin-top:16px" href="../login/index.html">Iniciar Sesión</a>
+    </div>
   </main>
 
-  <script src="../shared/layout.js?v=5"></script>
-  <script src="perfil.js"></script>
+  <script src="../shared/layout.js?v=6"></script>
+  <script src="perfil.js?v=6"></script>
 </body>
 </html>

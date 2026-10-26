@@ -62,8 +62,9 @@ services:
     build: ./microservicios/catalogo
     environment:
       MONGO_URI: ${MONGO_URI:-mongodb://catalogo:catalogo@mongo:27017/catalogo}
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
       PORT: ${CATALOGO_PORT:-3000}
+      CATALOGO_PORT: ${CATALOGO_PORT:-3000}
     depends_on:
       mongo:
         condition: service_healthy
@@ -80,7 +81,7 @@ services:
       DB_SCHEMA: auth
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
     depends_on:
       db:
         condition: service_healthy
@@ -99,25 +100,24 @@ services:
       DB_PASSWORD: ordenes
       DB_SCHEMA: ordenes
       CATALOGO_URL: http://catalogo:3000
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
     depends_on:
       db:
         condition: service_healthy
 
-  # analitica:         # Python + PostgreSQL (esquema analitica)
-  #   build: ./microservicios/analitica
-  #   environment:
-  #     DB_HOST: db
-  #     DB_PORT: 5432
-  #     DB_NAME: ${POSTGRES_DB:-ecommerce}
-  #     DB_USER: analitica
-  #     DB_PASSWORD: analitica
-  #     DB_SCHEMA: analitica
-  #     ORDENES_URL: http://ordenes:8080
-  #     JWT_SECRET: ${JWT_SECRET}
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  analitica:          # Python: API de reportes (solo admin) y recomendaciones
+    build: ./microservicios/analitica
+    # Sin puerto publicado: se accede por el gateway en /api/analitica/.
+    # El dashboard Streamlit (app.py) queda para uso local: streamlit run app.py
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      CATALOGO_URL: http://catalogo:3000
+      AUTH_URL: http://auth:8081
+      ORDENES_URL: http://ordenes:8080
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
+    depends_on:
+      - catalogo
+      - auth
 
   # ---------- Entrada ----------
 
@@ -130,6 +130,8 @@ services:
       - frontend
       - auth
       - catalogo
+      - ordenes
+      - analitica
 
   # Sin puerto publicado: se accede a través del gateway.
   frontend:

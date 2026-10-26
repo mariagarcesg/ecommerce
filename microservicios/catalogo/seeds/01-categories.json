@@ -1,0 +1,27 @@
+[
+  {
+    "_id": { "$oid": "671600000000000000000101" },
+    "name": "Electrónica",
+    "description": "Smartphones, laptops y tecnología moderna"
+  },
+  {
+    "_id": { "$oid": "671600000000000000000102" },
+    "name": "Accesorios",
+    "description": "Fundas, mouse y complementos"
+  },
+  {
+    "_id": { "$oid": "671600000000000000000103" },
+    "name": "Calzado",
+    "description": "Zapatillas deportivas y calzado casual"
+  },
+  {
+    "_id": { "$oid": "671600000000000000000104" },
+    "name": "Ropa",
+    "description": "Prendas deportivas y ropa de entrenamiento"
+  },
+  {
+    "_id": { "$oid": "671600000000000000000105" },
+    "name": "Hogar",
+    "description": "Electrodomésticos y café de especialidad"
+  }
+]

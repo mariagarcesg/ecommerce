@@ -1,19 +1,36 @@
-// Formulario de login: valida email y contraseña en el navegador
-// y los envía a POST /api/auth/login (gateway -> auth).
+// ==========================================================================
+// ECOMMERCE - CONTROLADOR DE LOGIN (GO + POSTGRESQL + REDIS)
+// ==========================================================================
+
 (function () {
   const form = document.getElementById('form-login');
   const mensaje = document.getElementById('mensaje');
   const boton = form.querySelector('button[type="submit"]');
 
-  // Si ya hay una sesión abierta no tiene sentido mostrar el login
-  if (Sesion.usuario()) {
+  const inputEmail = document.getElementById('email');
+  const inputPassword = document.getElementById('password');
+
+  // Botones de acceso rápido para pruebas
+  document.getElementById('btn-demo-admin')?.addEventListener('click', () => {
+    inputEmail.value = 'admin@test.com';
+    inputPassword.value = 'admin123';
+    window.Notificaciones.toast('Credenciales de Administrador cargadas.', 'info');
+  });
+
+  document.getElementById('btn-demo-cliente')?.addEventListener('click', () => {
+    inputEmail.value = 'cliente@test.com';
+    inputPassword.value = 'cliente123';
+    window.Notificaciones.toast('Credenciales de Cliente cargadas.', 'info');
+  });
+
+  if (window.Sesion.usuario()) {
     window.location.replace('../catalogo/index.html');
     return;
   }
 
   const campos = {
     email: {
-      input: document.getElementById('email'),
+      input: inputEmail,
       error: document.getElementById('email-error'),
       validar(valor) {
         if (!valor) return 'Ingresa tu correo electrónico.';
@@ -22,7 +39,7 @@
       },
     },
     password: {
-      input: document.getElementById('password'),
+      input: inputPassword,
       error: document.getElementById('password-error'),
       validar(valor) {
         if (!valor) return 'Ingresa tu contraseña.';
@@ -38,7 +55,6 @@
     return !error;
   }
 
-  // Limpia el error de un campo en cuanto el usuario lo corrige
   Object.values(campos).forEach((campo) => {
     campo.input.addEventListener('input', () => {
       if (campo.input.getAttribute('aria-invalid') === 'true') validarCampo(campo);
@@ -54,28 +70,36 @@
     if (!valido) return;
 
     boton.disabled = true;
+    boton.textContent = 'Verificando credenciales...';
+
+    const email = campos.email.input.value.trim();
+    const password = campos.password.input.value;
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: campos.email.input.value.trim(),
-          password: campos.password.input.value,
-        }),
+        body: JSON.stringify({ email, password }),
       });
       const datos = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        mostrarError(datos.error || 'No se pudo iniciar sesión.');
+      if (res.ok) {
+        window.Sesion.guardar(datos.token, datos.usuario);
+        window.Notificaciones.toast('Sesión iniciada con éxito.', 'exito');
+        setTimeout(() => { window.location.href = '../catalogo/index.html'; }, 500);
+        return;
+      } else {
+        mostrarError(datos.error || 'Credenciales incorrectas.');
+        boton.disabled = false;
+        boton.textContent = 'Ingresar al Sistema';
         return;
       }
-
-      Sesion.guardar(datos.token, datos.usuario);
-      window.location.href = '../catalogo/index.html';
     } catch {
-      mostrarError('No se pudo conectar con el servidor.');
+      // Sin respuesta del servicio auth no hay sesión: nunca se crea una sesión local
+      mostrarError('No se pudo conectar con el microservicio de autenticación.');
     } finally {
       boton.disabled = false;
+      boton.textContent = 'Ingresar al Sistema';
     }
   });
 

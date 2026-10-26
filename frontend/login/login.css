@@ -1,17 +1,23 @@
+/* ==========================================================================
+   ESTILOS DE LOGIN Y REGISTRO - PALETA ROJO Y BLANCO (SIN DEGRADADOS)
+   ========================================================================== */
+
 .card {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   padding: 32px;
-  background: var(--color-superficie);
+  background-color: var(--color-blanco);
   border: 1px solid var(--color-borde);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  border-top: 5px solid var(--color-rojo-principal);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra-md);
   text-align: left;
 }
 
 .card__titulo {
-  margin-bottom: 24px;
   font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--color-texto);
   text-align: center;
 }
 
@@ -28,38 +34,36 @@
 }
 
 .campo label {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-texto);
 }
 
 .campo input {
-  padding: 10px 12px;
-  border: 1px solid var(--color-borde);
+  padding: 10px 14px;
+  border: 1px solid var(--color-borde-fuerte);
   border-radius: var(--radio);
-  background: var(--color-superficie);
+  background-color: var(--color-blanco);
   color: var(--color-texto);
   font: inherit;
+  transition: all 0.15s ease;
 }
 
 .campo input:focus {
   outline: none;
-  border-color: var(--color-primario);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: var(--color-rojo-principal);
+  box-shadow: 0 0 0 3px var(--color-rojo-suave);
 }
 
 .campo input[aria-invalid="true"] {
-  border-color: #dc2626;
+  border-color: var(--color-rojo-principal);
 }
 
 .campo__error {
-  min-height: 1em;
-  color: #dc2626;
+  min-height: 1.2em;
+  color: var(--color-rojo-principal);
   font-size: 0.8rem;
-}
-
-.boton--bloque {
-  width: 100%;
-  padding: 10px 16px;
+  font-weight: 600;
 }
 
 .card__pie {
@@ -72,8 +76,8 @@
 }
 
 .card__pie a {
-  color: var(--color-primario);
-  font-weight: 600;
+  color: var(--color-rojo-principal);
+  font-weight: 800;
 }
 
 .card__pie a:hover {
@@ -84,19 +88,13 @@
   min-height: 1.2em;
   font-size: 0.9rem;
   text-align: center;
+  font-weight: 700;
 }
 
 .formulario__mensaje--error {
-  color: #dc2626;
+  color: var(--color-rojo-principal);
 }
 
-.boton:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-@media (max-width: 480px) {
-  .card {
-    padding: 24px 20px;
-  }
+.formulario__mensaje--exito {
+  color: var(--color-exito);
 }

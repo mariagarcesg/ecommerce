@@ -3,23 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Órdenes | ecommerce</title>
-  <link rel="stylesheet" href="../shared/styles.css?v=5">
+  <title>Mis Pedidos | ECOMMERCE</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=6">
 </head>
 <body>
-  <!-- Las dos secciones empiezan ocultas: ordenes.js muestra una según el rol -->
-  <main class="contenido" id="contenido-admin" hidden>
-    <h1>Página de órdenes en construcción</h1>
-    <p>Pronto podrás gestionar aquí las órdenes de la tienda.</p>
+
+  <main class="contenido-principal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:900;color:var(--color-texto)">Historial de Pedidos y Compras</h1>
+        <p style="color:var(--color-texto-suave);font-size:0.92rem">Transacciones seguras y seguimiento de pedidos en tiempo real.</p>
+      </div>
+      <a class="boton boton--secundario boton--sm" href="../catalogo/index.html">← Volver al Catálogo</a>
+    </div>
+
+    <!-- Lista de Órdenes -->
+    <div id="contenedor-lista-ordenes" style="display:flex;flex-direction:column;gap:18px;">
+      <!-- Tarjetas inyectadas por ordenes.js -->
+    </div>
   </main>
 
-  <main class="contenido" id="acceso-denegado" hidden>
-    <h1>Acceso denegado</h1>
-    <p>Solo los administradores pueden ver esta página.</p>
-    <a class="boton" href="../catalogo/index.html">Volver al catálogo</a>
-  </main>
-
-  <script src="../shared/layout.js?v=5"></script>
-  <script src="ordenes.js"></script>
+  <script src="../shared/layout.js?v=6"></script>
+  <script src="ordenes.js?v=6"></script>
 </body>
 </html>

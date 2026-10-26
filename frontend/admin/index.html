@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel de Administración | ECOMMERCE</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=6">
+</head>
+<body>
+
+  <main class="contenido-principal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:900;color:var(--color-texto)">Panel de Control</h1>
+        <p style="color:var(--color-texto-suave);font-size:0.92rem">Gestión de Catálogo y Control de Órdenes de la Tienda.</p>
+      </div>
+
+      <!-- Selector de Pestañas -->
+      <div style="display:flex;gap:8px;background:var(--color-blanco);padding:6px;border-radius:var(--radio);border:1px solid var(--color-borde)">
+        <button class="chip chip--activo" id="tab-btn-catalogo" type="button">📦 Catálogo</button>
+        <button class="chip" id="tab-btn-ordenes" type="button">💳 Órdenes</button>
+        <button class="chip" id="tab-btn-analitica" type="button">📊 Analítica</button>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         PESTAÑA 1: GESTIÓN DE CATÁLOGO
+         ==================================================================== -->
+    <section class="tarjeta-admin" id="panel-catalogo">
+      <div class="tarjeta-admin__cabecera">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:800">Inventario de Productos</h2>
+          <span style="font-size:0.85rem;color:var(--color-texto-suave)">Gestión y disponibilidad de inventario</span>
+        </div>
+        <button class="boton boton--sm" id="btn-toggle-nuevo-producto" type="button">+ Agregar Producto</button>
+      </div>
+
+      <!-- Formulario para agregar producto nuevo (Oculto por defecto) -->
+      <form id="form-crear-producto" style="display:none;background:var(--color-fondo);padding:20px;border-radius:var(--radio);border:1px solid var(--color-borde);margin-bottom:24px">
+        <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:14px;color:var(--color-rojo-principal)">Nuevo Artículo de Catálogo</h3>
+        <div class="form-fila" style="margin-bottom:12px">
+          <div class="form-grupo">
+            <label for="adm-nombre">Nombre del Producto</label>
+            <input type="text" id="adm-nombre" required placeholder="Ej: Teclado Mecánico RGB Red">
+          </div>
+          <div class="form-grupo">
+            <label for="adm-categoria">Categoría</label>
+            <input type="text" id="adm-categoria" required placeholder="Ej: Electrónica / Accesorios">
+          </div>
+        </div>
+        <div class="form-fila" style="margin-bottom:12px">
+          <div class="form-grupo">
+            <label for="adm-precio">Precio ($)</label>
+            <input type="number" id="adm-precio" step="0.01" min="0" required placeholder="Ej: 59.99">
+          </div>
+          <div class="form-grupo">
+            <label for="adm-stock">Stock Inicial (Uds.)</label>
+            <input type="number" id="adm-stock" min="0" required placeholder="Ej: 15">
+          </div>
+        </div>
+        <div class="form-grupo" style="margin-bottom:16px">
+          <label for="adm-descripcion">Descripción</label>
+          <textarea id="adm-descripcion" rows="2" placeholder="Detalles y características principales del producto..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="boton boton--sm" type="submit">Guardar en Catálogo</button>
+          <button class="boton boton--secundario boton--sm" type="button" onclick="document.getElementById('form-crear-producto').style.display='none'">Cancelar</button>
+        </div>
+      </form>
+
+      <!-- Tabla de Productos -->
+      <div style="overflow-x:auto">
+        <table class="tabla-admin">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-adm-productos-cuerpo">
+            <!-- Inyectado por admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 2: CONTROL DE ÓRDENES
+         ==================================================================== -->
+    <section class="tarjeta-admin" id="panel-ordenes" style="display:none">
+      <div class="tarjeta-admin__cabecera">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:800">Historial Global de Pedidos</h2>
+          <span style="font-size:0.85rem;color:var(--color-texto-suave)">Transacciones procesadas en la plataforma</span>
+        </div>
+        <span class="badge-stock badge-stock--normal" id="conteo-total-pedidos">0 pedidos</span>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="tabla-admin">
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Artículos</th>
+              <th>Total</th>
+              <th>Estado Transacción</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-adm-ordenes-cuerpo">
+            <!-- Inyectado por admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 3: ANALÍTICA Y ESTADÍSTICAS (OCULTO POR EL MOMENTO)
+         ==================================================================== -->
+    <section class="tarjeta-admin" id="panel-analitica" style="display:none">
+      <div class="tarjeta-admin__cabecera">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="modulo-python__badge">Módulo Analítico</span>
+            <h2 style="font-size:1.25rem;font-weight:800">Módulo de Analítica y Datos Históricos</h2>
+          </div>
+          <span style="font-size:0.85rem;color:var(--color-texto-suave)" id="analitica-subtitulo">Productos y usuarios en tiempo real · ventas con datos simulados</span>
+        </div>
+        <button class="boton boton--sm" id="btn-refrescar-analitica" type="button">🔄 Actualizar Métricas</button>
+      </div>
+
+      <!-- KPI Cards en Paleta Rojo y Blanco -->
+      <div class="kpi-grilla">
+        <div class="kpi-card">
+          <div class="kpi-card__titulo">Productos Registrados</div>
+          <div class="kpi-card__valor" id="kpi-productos">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__titulo">Usuarios Activos</div>
+          <div class="kpi-card__valor" id="kpi-usuarios">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__titulo">Compras Realizadas</div>
+          <div class="kpi-card__valor" id="kpi-total-compras">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__titulo">Ingresos ($)</div>
+          <div class="kpi-card__valor" id="kpi-ingresos" style="color:var(--color-rojo-principal)">—</div>
+        </div>
+      </div>
+
+      <!-- Reporte de ventas por categoría y productos estrella -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div style="background:var(--color-fondo);padding:18px;border-radius:var(--radio);border:1px solid var(--color-borde)">
+          <h3 style="font-size:1rem;font-weight:800;margin-bottom:12px;color:var(--color-texto)">Compras por Mes</h3>
+          <div style="display:flex;flex-direction:column;gap:10px" id="barras-categorias-analitica">
+            <!-- Barras sólidas rojas y blancas -->
+          </div>
+        </div>
+
+        <div style="background:var(--color-fondo);padding:18px;border-radius:var(--radio);border:1px solid var(--color-borde)">
+          <h3 style="font-size:1rem;font-weight:800;margin-bottom:12px;color:var(--color-texto)">Productos Más Vendidos</h3>
+          <ul id="lista-top-productos" style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <!-- Inyectado por admin.js -->
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../shared/layout.js?v=6"></script>
+  <script src="admin.js?v=6"></script>
+</body>
+</html>
