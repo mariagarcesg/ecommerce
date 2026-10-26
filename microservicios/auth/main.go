@@ -69,6 +69,7 @@ func main() {
 	mux.HandleFunc("POST /login", srv.login)
 	mux.HandleFunc("POST /logout", srv.logout)
 	mux.HandleFunc("GET /me", srv.me)
+	mux.HandleFunc("GET /usuarios", srv.listarUsuarios)
 	mux.HandleFunc("GET /usuarios/total", srv.totalUsuarios)
 
 	log.Printf("Servicio de autenticación corriendo en puerto %s", cfg.Port)

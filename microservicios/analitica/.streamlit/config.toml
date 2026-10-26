@@ -1,0 +1,19 @@
+# Tema alineado con el frontend del e-commerce (paleta rojo y blanco).
+[theme]
+base = "light"
+primaryColor = "#DC2626"
+backgroundColor = "#F9FAFB"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#111827"
+font = "sans serif"
+
+[server]
+headless = true
+port = 8501
+address = "0.0.0.0"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

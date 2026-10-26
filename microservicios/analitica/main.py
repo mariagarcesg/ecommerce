@@ -121,7 +121,6 @@ def obtener_reportes(_admin: dict = Depends(requerir_admin)):
         "ingresos_totales": round(analytics_service.obtener_ingresos_totales(), 2),
         "compras_por_mes": analytics_service.obtener_compras_por_mes().to_dict(orient="records"),
         "productos_mas_vendidos": analytics_service.obtener_productos_mas_vendidos().to_dict(orient="records"),
-        "clientes_por_ciudad": analytics_service.obtener_clientes_por_ciudad().to_dict(orient="records"),
         "datos_ventas_simulados": True,
     }
 

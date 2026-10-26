@@ -18,12 +18,28 @@ JWT_SECRET = os.getenv("JWT_SECRET", "")
 
 TIMEOUT_SEGUNDOS = 5
 
+# El dashboard pide los mismos datos varias veces por pantalla; se guardan
+# unos segundos para no repetir la consulta HTTP en cada indicador.
+CACHE_SEGUNDOS = 15
+_cache: dict[str, tuple[float, object]] = {}
+
+
+def _con_cache(clave: str, consultar):
+    ahora = time.time()
+    guardado = _cache.get(clave)
+    if guardado and ahora - guardado[0] < CACHE_SEGUNDOS:
+        return guardado[1]
+    valor = consultar()
+    if valor is not None:
+        _cache[clave] = (ahora, valor)
+    return valor
+
 
 def _token_servicio() -> str:
     """JWT de corta duracion con rol admin, firmado con el secreto compartido.
 
-    auth exige rol admin para dar el total de usuarios; analitica firma su
-    propio token igual que lo haria auth (mismos claims: sub, nombre, rol).
+    auth exige rol admin para listar usuarios; analitica firma su propio
+    token igual que lo haria auth (mismos claims: sub, nombre, rol).
     """
     ahora = int(time.time())
     claims = {
@@ -43,24 +59,32 @@ def _get_json(url: str, headers: dict | None = None):
         return json.loads(respuesta.read().decode("utf-8"))
 
 
-def contar_productos_registrados() -> int | None:
-    """Cantidad de productos en catalogo (GET /products es publico)."""
+def obtener_productos() -> list[dict] | None:
+    """Productos de catalogo con su categoria (GET /products es publico)."""
+    return _con_cache("productos", _consultar_productos)
+
+
+def obtener_usuarios() -> list[dict] | None:
+    """Usuarios de auth sin contrasena: [{id, nombre, email, rol}] (GET /usuarios, solo admin)."""
+    return _con_cache("usuarios", _consultar_usuarios)
+
+
+def _consultar_productos() -> list[dict] | None:
     try:
         productos = _get_json(f"{CATALOGO_URL}/products")
-        return len(productos) if isinstance(productos, list) else None
+        return productos if isinstance(productos, list) else None
     except Exception:
         return None
 
 
-def contar_usuarios_activos() -> int | None:
-    """Cantidad de usuarios registrados en auth (GET /usuarios/total, solo admin)."""
+def _consultar_usuarios() -> list[dict] | None:
     if not JWT_SECRET:
         return None
     try:
-        datos = _get_json(
-            f"{AUTH_URL}/usuarios/total",
+        usuarios = _get_json(
+            f"{AUTH_URL}/usuarios",
             headers={"Authorization": f"Bearer {_token_servicio()}"},
         )
-        return int(datos["total"])
+        return usuarios if isinstance(usuarios, list) else None
     except Exception:
         return None

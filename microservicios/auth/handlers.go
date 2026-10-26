@@ -207,6 +207,42 @@ func (s *Servidor) totalUsuarios(w http.ResponseWriter, r *http.Request) {
 	responderJSON(w, http.StatusOK, map[string]int{"total": total})
 }
 
+// GET /usuarios (Authorization: Bearer <token de admin>) -> [{id, nombre, email, rol}].
+// Lo usa analitica para el detalle por rol; nunca devuelve el hash de la contraseña.
+func (s *Servidor) listarUsuarios(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.validarToken(r)
+	if err != nil {
+		responderError(w, http.StatusUnauthorized, "Sesión no válida.")
+		return
+	}
+	if claims.Rol != "admin" {
+		responderError(w, http.StatusForbidden, "No tienes permisos para realizar esta acción.")
+		return
+	}
+
+	filas, err := s.db.QueryContext(r.Context(), `SELECT id, nombre, email, rol FROM usuarios ORDER BY id`)
+	if err != nil {
+		errorInterno(w, err)
+		return
+	}
+	defer filas.Close()
+
+	usuarios := []Usuario{}
+	for filas.Next() {
+		var u Usuario
+		if err := filas.Scan(&u.ID, &u.Nombre, &u.Email, &u.Rol); err != nil {
+			errorInterno(w, err)
+			return
+		}
+		usuarios = append(usuarios, u)
+	}
+	if err := filas.Err(); err != nil {
+		errorInterno(w, err)
+		return
+	}
+	responderJSON(w, http.StatusOK, usuarios)
+}
+
 func (s *Servidor) responderSesion(w http.ResponseWriter, status int, u Usuario) {
 	token, err := s.generarToken(u)
 	if err != nil {
