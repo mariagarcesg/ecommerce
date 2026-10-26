@@ -82,11 +82,43 @@ services:
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
       JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
+      OTP_URL: http://otp:8083
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+      otp:
+        condition: service_started
+
+  # Go + Redis: códigos de verificación por correo. Sin puerto publicado ni
+  # ruta en el gateway: solo lo llama auth por la red interna.
+  otp:
+    build: ./microservicios/otp
+    environment:
+      PORT: 8083
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
+      OTP_SECRET: ${OTP_SECRET:-cambia-esto-por-otra-clave-larga}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-ECOMMERCE <no-responder@ecommerce.local>}
+    depends_on:
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  # Mailpit: servidor de correo de pruebas. Atrapa todos los correos (no envía
+  # nada real) y los muestra en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: ecommerce-mailpit
+    ports:
+      - "${MAILPIT_PORT:-8025}:8025"
 
   ordenes:           # Java + PostgreSQL (esquema ordenes)
     build: ./microservicios/ordenes

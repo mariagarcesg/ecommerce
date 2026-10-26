@@ -8,12 +8,14 @@ E-commerce con **microservicios en contenedores Docker**. Cada microservicio usa
 |---|---|---|---|
 | `microservicios/catalogo/` | Node.js | MongoDB (base `catalogo`) | Catálogo de productos: productos, categorías, precios, stock |
 | `microservicios/auth/` | Go | PostgreSQL (esquema `auth`) + Redis | Autenticación: registro, login, emisión de tokens JWT |
+| `microservicios/otp/` | Go | Redis | Códigos de verificación (OTP) por correo al registrarse. Solo lo llama `auth` |
 | `microservicios/ordenes/` | Java | PostgreSQL (esquema `ordenes`) | Órdenes seguras y transacciones: carrito, pedidos, pagos |
 | `microservicios/analitica/` | Python | PostgreSQL (esquema `analitica`) | Análisis y datos históricos: reportes, estadísticas de ventas |
 
 ```
                           ┌──► catalogo  (Node)   ──► MongoDB
 Frontend ──► gateway ─────┼──► auth      (Go)     ──► PostgreSQL [auth] + Redis
+                          │      └──► otp (Go)    ──► Redis + SMTP (Mailpit)
                           ├──► ordenes   (Java)   ──► PostgreSQL [ordenes]
                           └──► analitica (Python) ──► PostgreSQL [analitica]
 ```
@@ -76,12 +78,28 @@ Endpoints de `auth` (a través del gateway):
 
 | Método y ruta | Cuerpo / header | Respuesta |
 |---|---|---|
-| `POST /api/auth/registro` | `{nombre, email, password}` | `201 {token, usuario}` — crea un usuario `cliente` |
-| `POST /api/auth/login` | `{email, password}` | `200 {token, usuario}` · `401` credenciales incorrectas · `429` tras 5 fallos (15 min) |
+| `POST /api/auth/registro` | `{nombre, email, password}` | `201 {mensaje, email, correo_enviado}` — crea un usuario `cliente` **sin verificar** y le envía un código al correo |
+| `POST /api/auth/verificar` | `{email, codigo}` | `200 {token, usuario}` — verifica el correo e inicia sesión · `400` código incorrecto, expirado o sin intentos |
+| `POST /api/auth/reenviar-codigo` | `{email}` | `202` — envía un código nuevo · `429 {reintentar_en}` si se pide antes de 60 s o más de 5 por hora |
+| `POST /api/auth/login` | `{email, password}` | `200 {token, usuario}` · `401` credenciales incorrectas · `403 {codigo: "correo_no_verificado"}` · `429` tras 5 fallos (15 min) |
 | `POST /api/auth/logout` | `Authorization: Bearer <token>` | `204` — revoca el token en Redis |
 | `GET /api/auth/me` | `Authorization: Bearer <token>` | `200 {id, nombre, email, rol}` · `401` si el token no es válido o fue revocado |
 
 Los scripts de `scripts/` son de bash: en Windows ejecutarlos desde **Git Bash** (ej. `./scripts/cargar-seeds.sh`).
+
+### Verificación del correo (OTP)
+
+Al registrarse, el usuario recibe un código de 6 dígitos por correo y debe escribirlo en `login/verificar.html` antes de poder iniciar sesión. Los usuarios de los seeds ya vienen verificados.
+
+```
+registro ──► auth (crea usuario, verificado=false) ──► otp ──► correo con el código
+verificar ──► auth ──► otp (¿código válido?) ──► auth marca verificado=true y entrega el JWT
+```
+
+- **Bandeja de pruebas:** los correos no salen a internet; los atrapa **Mailpit** en **http://localhost:8025**. Ahí se ve el código.
+- **Correo real:** configurar `SMTP_HOST`, `SMTP_PORT` (587), `SMTP_USER`, `SMTP_PASSWORD` y `SMTP_FROM` en `.env` (ver `.env.example`).
+- **Reglas:** el código vence en 10 minutos, sirve una sola vez y admite 5 intentos. Se puede pedir uno cada 60 segundos y hasta 5 por hora.
+- **Seguridad:** `otp` guarda en Redis solo el HMAC del código (con `OTP_SECRET`), no tiene puerto publicado ni ruta en el gateway, y solo acepta tokens con rol `servicio`, que emite `auth`.
 
 ---
 
@@ -95,6 +113,7 @@ Regla de oro: **cada microservicio solo accede a su propia base de datos.** Si n
 | ordenes → catalogo | Al crear un pedido, `ordenes` consulta precio y stock a `catalogo` por API y **guarda una copia** (nombre, precio) en el pedido. Así el pedido no cambia si luego cambia el precio del producto. |
 | analitica → ordenes | `analitica` **no lee** el esquema `ordenes`. Pide los datos a la API de `ordenes` (ej. ventas del día) y guarda resúmenes en su propio esquema. Más adelante se puede pasar a eventos con RabbitMQ. |
 | auth → todos | `auth` emite un token JWT; los demás solo lo verifican (ver abajo). Nadie consulta la BD de `auth`. |
+| auth → otp | Al registrarse un usuario, `auth` pide a `otp` que envíe el código y luego que lo valide (`POST /otp/enviar` y `POST /otp/validar`, red interna). |
 
 Dentro de Docker los servicios se llaman por su nombre en el compose: `http://catalogo:3000`, `http://ordenes:8080`, etc.
 

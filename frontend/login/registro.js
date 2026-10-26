@@ -1,5 +1,6 @@
 // Formulario de registro: valida los datos en el navegador y los envía a
-// POST /api/auth/registro (gateway -> auth). Al registrarse, el usuario queda logueado.
+// POST /api/auth/registro (gateway -> auth). auth envía un código al correo y
+// el usuario pasa a verificar.html; la sesión se inicia al verificar el código.
 (function () {
   const form = document.getElementById('form-registro');
   const mensaje = document.getElementById('mensaje');
@@ -89,8 +90,9 @@
         return;
       }
 
-      Sesion.guardar(datos.token, datos.usuario);
-      window.location.href = '../catalogo/index.html';
+      // Si el correo no salió, verificar.html pide otro código al abrir
+      const reenviar = datos.correo_enviado === false ? '&reenviar=1' : '';
+      window.location.href = `verificar.html?email=${encodeURIComponent(datos.email)}${reenviar}`;
     } catch {
       mostrarError('No se pudo conectar con el servidor.');
     } finally {

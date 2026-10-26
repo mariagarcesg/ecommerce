@@ -1,12 +1,14 @@
 // Microservicio de autenticación.
 //   PostgreSQL (esquema auth): usuarios permanentes.
 //   Redis: intentos fallidos de login y tokens revocados (logout).
+//   otp: envío y validación del código que verifica el correo al registrarse.
 package main
 
 import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Config struct {
@@ -15,6 +17,7 @@ type Config struct {
 	RedisAddr     string
 	RedisPassword string
 	JWTSecret     string
+	OTPURL        string
 }
 
 func cargarConfig() Config {
@@ -28,6 +31,7 @@ func cargarConfig() Config {
 		RedisAddr:     env("REDIS_ADDR", "redis:6379"),
 		RedisPassword: env("REDIS_PASSWORD", ""),
 		JWTSecret:     os.Getenv("JWT_SECRET"),
+		OTPURL:        env("OTP_URL", "http://otp:8083"),
 	}
 	if cfg.JWTSecret == "" {
 		log.Fatal("Falta la variable de entorno JWT_SECRET")
@@ -61,11 +65,19 @@ func main() {
 	}
 	defer rdb.Close()
 
-	srv := &Servidor{db: db, redis: rdb, jwtSecret: []byte(cfg.JWTSecret)}
+	srv := &Servidor{
+		db:        db,
+		redis:     rdb,
+		jwtSecret: []byte(cfg.JWTSecret),
+		otpURL:    cfg.OTPURL,
+		http:      &http.Client{Timeout: 45 * time.Second}, // otp espera al servidor de correo
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", srv.health)
 	mux.HandleFunc("POST /registro", srv.registro)
+	mux.HandleFunc("POST /verificar", srv.verificar)
+	mux.HandleFunc("POST /reenviar-codigo", srv.reenviarCodigo)
 	mux.HandleFunc("POST /login", srv.login)
 	mux.HandleFunc("POST /logout", srv.logout)
 	mux.HandleFunc("GET /me", srv.me)

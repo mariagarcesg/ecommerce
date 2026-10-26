@@ -25,6 +25,8 @@ type Servidor struct {
 	db        *sql.DB
 	redis     *redis.Client
 	jwtSecret []byte
+	otpURL    string
+	http      *http.Client
 }
 
 type Usuario struct {
@@ -43,7 +45,8 @@ func (s *Servidor) health(w http.ResponseWriter, r *http.Request) {
 	responderJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "auth"})
 }
 
-// POST /registro {nombre, email, password} -> crea un usuario "cliente" y lo deja logueado.
+// POST /registro {nombre, email, password} -> crea un usuario "cliente" sin verificar
+// y le pide a otp que envíe el código al correo. La sesión se entrega en /verificar.
 func (s *Servidor) registro(w http.ResponseWriter, r *http.Request) {
 	var datos struct {
 		Nombre   string `json:"nombre"`
@@ -77,7 +80,7 @@ func (s *Servidor) registro(w http.ResponseWriter, r *http.Request) {
 
 	u := Usuario{Nombre: datos.Nombre, Email: datos.Email, Rol: "cliente"}
 	err = s.db.QueryRowContext(r.Context(),
-		`INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES ($1, $2, $3, $4) RETURNING id`,
+		`INSERT INTO usuarios (nombre, email, password_hash, rol, verificado) VALUES ($1, $2, $3, $4, false) RETURNING id`,
 		u.Nombre, u.Email, string(hash), u.Rol,
 	).Scan(&u.ID)
 	var pgErr *pgconn.PgError
@@ -90,7 +93,108 @@ func (s *Servidor) registro(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.responderSesion(w, http.StatusCreated, u)
+	// La cuenta ya existe aunque falle el correo: el usuario puede pedir
+	// el código otra vez desde la pantalla de verificación.
+	enviado := true
+	if err := s.enviarCodigoOTP(r.Context(), u.Email); err != nil {
+		log.Printf("No se pudo enviar el código de verificación a %s: %v", u.Email, err)
+		enviado = false
+	}
+	responderJSON(w, http.StatusCreated, map[string]any{
+		"mensaje":        "Cuenta creada. Revisa tu correo para verificarla.",
+		"email":          u.Email,
+		"correo_enviado": enviado,
+	})
+}
+
+// POST /verificar {email, codigo} -> valida el código con otp, marca el correo
+// como verificado y deja al usuario logueado.
+func (s *Servidor) verificar(w http.ResponseWriter, r *http.Request) {
+	var datos struct {
+		Email  string `json:"email"`
+		Codigo string `json:"codigo"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
+		responderError(w, http.StatusBadRequest, "Datos inválidos.")
+		return
+	}
+	datos.Email = normalizarEmail(datos.Email)
+	ctx := r.Context()
+
+	var u Usuario
+	var verificado bool
+	err := s.db.QueryRowContext(ctx,
+		`SELECT id, nombre, email, rol, verificado FROM usuarios WHERE email = $1`, datos.Email,
+	).Scan(&u.ID, &u.Nombre, &u.Email, &u.Rol, &verificado)
+	if errors.Is(err, sql.ErrNoRows) {
+		responderError(w, http.StatusBadRequest, "El código no es válido.")
+		return
+	}
+	if err != nil {
+		errorInterno(w, err)
+		return
+	}
+	if verificado {
+		responderError(w, http.StatusConflict, "Este correo ya está verificado. Inicia sesión.")
+		return
+	}
+
+	if err := s.validarCodigoOTP(ctx, u.Email, datos.Codigo); err != nil {
+		var eOTP *errorOTP
+		if errors.As(err, &eOTP) {
+			responderJSON(w, eOTP.Status, eOTP)
+			return
+		}
+		log.Printf("Error validando el código con otp: %v", err)
+		responderError(w, http.StatusBadGateway, "No se pudo validar el código. Intenta de nuevo.")
+		return
+	}
+
+	if _, err := s.db.ExecContext(ctx, `UPDATE usuarios SET verificado = true WHERE id = $1`, u.ID); err != nil {
+		errorInterno(w, err)
+		return
+	}
+	s.responderSesion(w, http.StatusOK, u)
+}
+
+// POST /reenviar-codigo {email} -> pide a otp un código nuevo si la cuenta existe
+// y no está verificada. Si no, responde lo mismo para no revelar qué correos hay.
+func (s *Servidor) reenviarCodigo(w http.ResponseWriter, r *http.Request) {
+	var datos struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
+		responderError(w, http.StatusBadRequest, "Datos inválidos.")
+		return
+	}
+	datos.Email = normalizarEmail(datos.Email)
+	ctx := r.Context()
+	respuesta := map[string]string{"mensaje": "Si la cuenta existe y no está verificada, te enviamos un código nuevo."}
+
+	var verificado bool
+	err := s.db.QueryRowContext(ctx,
+		`SELECT verificado FROM usuarios WHERE email = $1`, datos.Email,
+	).Scan(&verificado)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && verificado) {
+		responderJSON(w, http.StatusAccepted, respuesta)
+		return
+	}
+	if err != nil {
+		errorInterno(w, err)
+		return
+	}
+
+	if err := s.enviarCodigoOTP(ctx, datos.Email); err != nil {
+		var eOTP *errorOTP
+		if errors.As(err, &eOTP) {
+			responderJSON(w, eOTP.Status, eOTP)
+			return
+		}
+		log.Printf("Error pidiendo el código a otp: %v", err)
+		responderError(w, http.StatusBadGateway, "No se pudo enviar el código. Intenta de nuevo.")
+		return
+	}
+	responderJSON(w, http.StatusAccepted, respuesta)
 }
 
 // POST /login {email, password} -> devuelve un JWT.
@@ -120,9 +224,10 @@ func (s *Servidor) login(w http.ResponseWriter, r *http.Request) {
 
 	var u Usuario
 	var hash string
+	var verificado bool
 	err = s.db.QueryRowContext(ctx,
-		`SELECT id, nombre, email, rol, password_hash FROM usuarios WHERE email = $1`, datos.Email,
-	).Scan(&u.ID, &u.Nombre, &u.Email, &u.Rol, &hash)
+		`SELECT id, nombre, email, rol, password_hash, verificado FROM usuarios WHERE email = $1`, datos.Email,
+	).Scan(&u.ID, &u.Nombre, &u.Email, &u.Rol, &hash, &verificado)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		errorInterno(w, err)
 		return
@@ -142,6 +247,16 @@ func (s *Servidor) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.redis.Del(ctx, claveIntentos)
+
+	// Solo se avisa después de comprobar la contraseña, para no revelar
+	// a terceros si un correo está registrado.
+	if !verificado {
+		responderJSON(w, http.StatusForbidden, map[string]string{
+			"error":  "Verifica tu correo para iniciar sesión.",
+			"codigo": "correo_no_verificado",
+		})
+		return
+	}
 	s.responderSesion(w, http.StatusOK, u)
 }
 

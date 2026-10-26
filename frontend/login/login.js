@@ -88,6 +88,11 @@
         window.Notificaciones.toast('Sesión iniciada con éxito.', 'exito');
         setTimeout(() => { window.location.href = '../catalogo/index.html'; }, 500);
         return;
+      } else if (res.status === 403 && datos.codigo === 'correo_no_verificado') {
+        // Contraseña correcta pero correo sin verificar: se pide un código nuevo
+        window.Notificaciones.toast('Verifica tu correo para continuar.', 'info');
+        window.location.href = `verificar.html?email=${encodeURIComponent(email)}&reenviar=1`;
+        return;
       } else {
         mostrarError(datos.error || 'Credenciales incorrectas.');
         boton.disabled = false;
