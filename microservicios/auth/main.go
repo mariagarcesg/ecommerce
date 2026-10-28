@@ -1,5 +1,5 @@
 // Microservicio de autenticación.
-//   PostgreSQL (esquema auth): usuarios permanentes.
+//   PostgreSQL (esquema auth): usuarios y roles.
 //   Redis: intentos fallidos de login, tickets de login pendientes de código y
 //   tokens revocados (logout).
 //   otp: envío y validación de los códigos que verifican el correo al
@@ -86,6 +86,12 @@ func main() {
 	mux.HandleFunc("POST /logout", srv.logout)
 	mux.HandleFunc("GET /me", srv.me)
 	mux.HandleFunc("GET /usuarios", srv.listarUsuarios)
+	mux.HandleFunc("POST /usuarios", srv.crearUsuario)
+	mux.HandleFunc("PUT /usuarios/{id}", srv.actualizarUsuario)
+	mux.HandleFunc("GET /roles", srv.listarRoles)
+	mux.HandleFunc("POST /roles", srv.crearRol)
+	mux.HandleFunc("PUT /roles/{id}", srv.actualizarRol)
+	mux.HandleFunc("DELETE /roles/{id}", srv.eliminarRol)
 	mux.HandleFunc("GET /usuarios/total", srv.totalUsuarios)
 
 	log.Printf("Servicio de autenticación corriendo en puerto %s", cfg.Port)

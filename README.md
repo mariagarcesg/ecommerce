@@ -128,7 +128,7 @@ Qué guarda `auth` en cada base de datos:
 
 | PostgreSQL (esquema `auth`) — datos permanentes | Redis — datos temporales y rápidos |
 |---|---|
-| Usuarios, email, **hash** de la contraseña (bcrypt), rol | Sesiones activas, tokens revocados (logout), límite de intentos de login, códigos de verificación |
+| Tabla `usuarios`: nombre, email, **hash** de la contraseña (bcrypt), verificado, activo y `rol_id` → tabla `roles` (`admin`, `cliente`) | Sesiones activas, tokens revocados (logout), sesiones cerradas por el admin, límite de intentos de login, tickets de login pendientes, códigos de verificación |
 
 - Las contraseñas **nunca** se guardan en texto plano, solo su hash (bcrypt).
 - `JWT_SECRET` va en `.env`. En `.env.example` hay un valor de relleno.
