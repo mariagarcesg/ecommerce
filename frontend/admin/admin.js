@@ -12,21 +12,23 @@
   // Pestañas
   const tabCatalogo = document.getElementById('tab-btn-catalogo');
   const tabOrdenes = document.getElementById('tab-btn-ordenes');
+  const tabUsuarios = document.getElementById('tab-btn-usuarios');
   const tabAnalitica = document.getElementById('tab-btn-analitica');
 
   const panelCatalogo = document.getElementById('panel-catalogo');
   const panelOrdenes = document.getElementById('panel-ordenes');
+  const panelUsuarios = document.getElementById('panel-usuarios');
   const panelAnalitica = document.getElementById('panel-analitica');
 
   function activarTab(tabActivo, panelActivo) {
-    [tabCatalogo, tabOrdenes, tabAnalitica].forEach(t => t.classList.remove('chip--activo'));
-    [panelCatalogo, panelOrdenes, panelAnalitica].forEach(p => p.style.display = 'none');
+    [tabCatalogo, tabOrdenes, tabUsuarios, tabAnalitica].forEach(t => t.classList.remove('chip--activo'));
+    [panelCatalogo, panelOrdenes, panelUsuarios, panelAnalitica].forEach(p => p.style.display = 'none');
 
     tabActivo.classList.add('chip--activo');
     panelActivo.style.display = 'block';
 
     // La URL refleja la pestaña, para que "Reportes" del header funcione desde cualquier pestaña
-    const hash = panelActivo === panelAnalitica ? '#analitica' : '';
+    const hash = panelActivo === panelAnalitica ? '#analitica' : panelActivo === panelUsuarios ? '#usuarios' : '';
     if (location.hash !== hash) history.replaceState(null, '', location.pathname + hash);
   }
 
@@ -37,6 +39,10 @@
   tabOrdenes?.addEventListener('click', () => {
     activarTab(tabOrdenes, panelOrdenes);
     cargarTablaOrdenes();
+  });
+  tabUsuarios?.addEventListener('click', () => {
+    activarTab(tabUsuarios, panelUsuarios);
+    cargarTablaUsuarios();
   });
   tabAnalitica?.addEventListener('click', () => {
     activarTab(tabAnalitica, panelAnalitica);
@@ -278,13 +284,87 @@
     }).join('');
   }
 
-  // ---------- 3. ANALÍTICA Y ESTADÍSTICAS (Python Microservice) ----------
-  // GET /api/analitica/reportes (gateway -> analitica), solo con token de rol admin
   function escapar(texto) {
     const div = document.createElement('div');
     div.textContent = String(texto ?? '');
     return div.innerHTML;
   }
+
+  // ---------- USUARIOS REGISTRADOS (Go + PostgreSQL) ----------
+  // GET /api/auth/usuarios (gateway -> auth), solo con token de rol admin.
+  // Sin datos de ejemplo: si auth no responde se muestra el error.
+  const buscarUsuarios = document.getElementById('buscar-usuarios');
+  let usuariosRegistrados = [];
+
+  function mensajeTablaUsuarios(texto) {
+    const tabla = document.getElementById('tabla-adm-usuarios-cuerpo');
+    if (tabla) tabla.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--color-texto-suave)">${escapar(texto)}</td></tr>`;
+  }
+
+  async function cargarTablaUsuarios() {
+    mensajeTablaUsuarios('Cargando usuarios...');
+    try {
+      const res = await fetch('/api/auth/usuarios', {
+        headers: { Authorization: `Bearer ${window.Sesion.token()}` }
+      });
+      if (res.status === 401 || res.status === 403) {
+        mensajeTablaUsuarios('Tu sesión no tiene permisos de administrador.');
+        window.Notificaciones.toast('Tu sesión no tiene permisos de administrador.', 'alerta');
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      usuariosRegistrados = await res.json();
+    } catch {
+      usuariosRegistrados = [];
+      document.getElementById('conteo-total-usuarios').textContent = '0 usuarios';
+      mensajeTablaUsuarios('No se pudo conectar con el microservicio de autenticación.');
+      return;
+    }
+    pintarTablaUsuarios();
+  }
+
+  function pintarTablaUsuarios() {
+    const tabla = document.getElementById('tabla-adm-usuarios-cuerpo');
+    const badgeConteo = document.getElementById('conteo-total-usuarios');
+    if (!tabla) return;
+
+    const total = usuariosRegistrados.length;
+    if (badgeConteo) badgeConteo.textContent = `${total} ${total === 1 ? 'usuario' : 'usuarios'}`;
+
+    const filtro = (buscarUsuarios?.value || '').trim().toLowerCase();
+    const visibles = usuariosRegistrados.filter(u =>
+      !filtro || u.nombre.toLowerCase().includes(filtro) || u.email.toLowerCase().includes(filtro)
+    );
+
+    if (visibles.length === 0) {
+      mensajeTablaUsuarios(filtro ? 'Ningún usuario coincide con la búsqueda.' : 'No hay usuarios registrados.');
+      return;
+    }
+
+    tabla.innerHTML = visibles.map(u => {
+      const rol = u.rol === 'admin'
+        ? `<span class="chip" style="font-size:0.75rem;padding:2px 8px;border-color:var(--color-rojo-principal);color:var(--color-rojo-principal)">Administrador</span>`
+        : `<span class="chip" style="font-size:0.75rem;padding:2px 8px">Cliente</span>`;
+      const verificado = u.verificado
+        ? `<span style="color:var(--color-exito);font-weight:700">Sí</span>`
+        : `<span style="color:var(--color-rojo-principal);font-weight:700">Pendiente</span>`;
+
+      return `
+        <tr>
+          <td><code style="font-size:0.8rem;background:var(--color-fondo);padding:2px 6px;border-radius:4px">${escapar(u.id)}</code></td>
+          <td style="font-weight:700">${escapar(u.nombre)}</td>
+          <td>${escapar(u.email)}</td>
+          <td>${rol}</td>
+          <td>${verificado}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  buscarUsuarios?.addEventListener('input', pintarTablaUsuarios);
+
+  // ---------- 3. ANALÍTICA Y ESTADÍSTICAS (Python Microservice) ----------
+  // GET /api/analitica/reportes (gateway -> analitica), solo con token de rol admin
 
   function pintarKpi(id, valor, formato = v => v) {
     const el = document.getElementById(id);
@@ -357,6 +437,9 @@
     if (location.hash === '#analitica') {
       activarTab(tabAnalitica, panelAnalitica);
       cargarMetricasPython();
+    } else if (location.hash === '#usuarios') {
+      activarTab(tabUsuarios, panelUsuarios);
+      cargarTablaUsuarios();
     } else {
       cargarTablaProductos();
     }

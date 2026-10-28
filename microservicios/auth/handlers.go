@@ -322,8 +322,9 @@ func (s *Servidor) totalUsuarios(w http.ResponseWriter, r *http.Request) {
 	responderJSON(w, http.StatusOK, map[string]int{"total": total})
 }
 
-// GET /usuarios (Authorization: Bearer <token de admin>) -> [{id, nombre, email, rol}].
-// Lo usa analitica para el detalle por rol; nunca devuelve el hash de la contraseña.
+// GET /usuarios (Authorization: Bearer <token de admin>) -> [{id, nombre, email, rol, verificado}].
+// Lo usan analitica (detalle por rol) y la pestaña Usuarios del panel admin;
+// nunca devuelve el hash de la contraseña.
 func (s *Servidor) listarUsuarios(w http.ResponseWriter, r *http.Request) {
 	claims, err := s.validarToken(r)
 	if err != nil {
@@ -335,17 +336,21 @@ func (s *Servidor) listarUsuarios(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filas, err := s.db.QueryContext(r.Context(), `SELECT id, nombre, email, rol FROM usuarios ORDER BY id`)
+	filas, err := s.db.QueryContext(r.Context(), `SELECT id, nombre, email, rol, verificado FROM usuarios ORDER BY id`)
 	if err != nil {
 		errorInterno(w, err)
 		return
 	}
 	defer filas.Close()
 
-	usuarios := []Usuario{}
+	type usuarioListado struct {
+		Usuario
+		Verificado bool `json:"verificado"`
+	}
+	usuarios := []usuarioListado{}
 	for filas.Next() {
-		var u Usuario
-		if err := filas.Scan(&u.ID, &u.Nombre, &u.Email, &u.Rol); err != nil {
+		var u usuarioListado
+		if err := filas.Scan(&u.ID, &u.Nombre, &u.Email, &u.Rol, &u.Verificado); err != nil {
 			errorInterno(w, err)
 			return
 		}
