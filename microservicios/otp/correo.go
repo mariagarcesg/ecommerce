@@ -23,7 +23,13 @@ type ConfigSMTP struct {
 	Remitente string // ej. "ECOMMERCE <no-responder@ecommerce.local>"
 }
 
-func (c ConfigSMTP) enviarCodigo(destino, codigo string, vigencia time.Duration) error {
+// Asunto y textos del correo según el propósito del código.
+var textosCorreo = map[string]struct{ asunto, motivo, aviso string }{
+	"registro": {"Tu código de verificación: ", "verificar tu cuenta", "Si no creaste una cuenta, ignora este correo."},
+	"login":    {"Tu código para iniciar sesión: ", "iniciar sesión", "Si no fuiste tú, alguien conoce tu contraseña: cámbiala."},
+}
+
+func (c ConfigSMTP) enviarCodigo(destino, codigo, proposito string, vigencia time.Duration) error {
 	remitente, err := mail.ParseAddress(c.Remitente)
 	if err != nil {
 		return fmt.Errorf("SMTP_FROM no es válido: %w", err)
@@ -67,7 +73,7 @@ func (c ConfigSMTP) enviarCodigo(destino, codigo string, vigencia time.Duration)
 	if err != nil {
 		return err
 	}
-	if _, err := escritor.Write(armarMensaje(remitente, para, codigo, vigencia)); err != nil {
+	if _, err := escritor.Write(armarMensaje(remitente, para, codigo, proposito, vigencia)); err != nil {
 		return err
 	}
 	if err := escritor.Close(); err != nil {
@@ -76,21 +82,22 @@ func (c ConfigSMTP) enviarCodigo(destino, codigo string, vigencia time.Duration)
 	return cliente.Quit()
 }
 
-func armarMensaje(remitente, para *mail.Address, codigo string, vigencia time.Duration) []byte {
+func armarMensaje(remitente, para *mail.Address, codigo, proposito string, vigencia time.Duration) []byte {
+	textos := textosCorreo[proposito]
 	var cuerpo bytes.Buffer
 	qp := quotedprintable.NewWriter(&cuerpo)
 	fmt.Fprintf(qp, "Hola,\r\n\r\n"+
-		"Tu código para verificar tu cuenta en ECOMMERCE es:\r\n\r\n"+
+		"Tu código para %s en ECOMMERCE es:\r\n\r\n"+
 		"    %s\r\n\r\n"+
 		"Vence en %d minutos y solo se puede usar una vez.\r\n"+
-		"Si no creaste una cuenta, ignora este correo.\r\n",
-		codigo, int(vigencia.Minutes()))
+		"%s\r\n",
+		textos.motivo, codigo, int(vigencia.Minutes()), textos.aviso)
 	qp.Close()
 
 	var msg bytes.Buffer
 	fmt.Fprintf(&msg, "From: %s\r\n", remitente.String())
 	fmt.Fprintf(&msg, "To: %s\r\n", para.String())
-	fmt.Fprintf(&msg, "Subject: %s\r\n", mime.QEncoding.Encode("utf-8", "Tu código de verificación: "+codigo))
+	fmt.Fprintf(&msg, "Subject: %s\r\n", mime.QEncoding.Encode("utf-8", textos.asunto+codigo))
 	fmt.Fprintf(&msg, "Date: %s\r\n", time.Now().Format(time.RFC1123Z))
 	msg.WriteString("MIME-Version: 1.0\r\n")
 	msg.WriteString("Content-Type: text/plain; charset=UTF-8\r\n")

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log"
@@ -19,6 +21,7 @@ import (
 const (
 	maxIntentosLogin = 5
 	bloqueoLogin     = 15 * time.Minute
+	duracionTicket   = 10 * time.Minute // igual que la vigencia del código de otp
 )
 
 type Servidor struct {
@@ -96,7 +99,7 @@ func (s *Servidor) registro(w http.ResponseWriter, r *http.Request) {
 	// La cuenta ya existe aunque falle el correo: el usuario puede pedir
 	// el código otra vez desde la pantalla de verificación.
 	enviado := true
-	if err := s.enviarCodigoOTP(r.Context(), u.Email); err != nil {
+	if err := s.enviarCodigoOTP(r.Context(), u.Email, propositoRegistro); err != nil {
 		log.Printf("No se pudo enviar el código de verificación a %s: %v", u.Email, err)
 		enviado = false
 	}
@@ -139,7 +142,7 @@ func (s *Servidor) verificar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.validarCodigoOTP(ctx, u.Email, datos.Codigo); err != nil {
+	if err := s.validarCodigoOTP(ctx, u.Email, propositoRegistro, datos.Codigo); err != nil {
 		var eOTP *errorOTP
 		if errors.As(err, &eOTP) {
 			responderJSON(w, eOTP.Status, eOTP)
@@ -184,7 +187,7 @@ func (s *Servidor) reenviarCodigo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.enviarCodigoOTP(ctx, datos.Email); err != nil {
+	if err := s.enviarCodigoOTP(ctx, datos.Email, propositoRegistro); err != nil {
 		var eOTP *errorOTP
 		if errors.As(err, &eOTP) {
 			responderJSON(w, eOTP.Status, eOTP)
@@ -197,7 +200,9 @@ func (s *Servidor) reenviarCodigo(w http.ResponseWriter, r *http.Request) {
 	responderJSON(w, http.StatusAccepted, respuesta)
 }
 
-// POST /login {email, password} -> devuelve un JWT.
+// POST /login {email, password} -> primer paso del inicio de sesión. Si la
+// contraseña es correcta, otp envía un código al correo y se responde 202 con
+// un ticket; el JWT se entrega en /login/verificar.
 // Redis cuenta los intentos fallidos por email y bloquea durante 15 minutos tras 5 fallos.
 func (s *Servidor) login(w http.ResponseWriter, r *http.Request) {
 	var datos struct {
@@ -257,7 +262,160 @@ func (s *Servidor) login(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	// El ticket prueba que la contraseña ya se comprobó: sin él, /login/verificar
+	// no acepta el código y no se puede entrar solo con acceso al correo.
+	ticket, err := generarTicket()
+	if err != nil {
+		errorInterno(w, err)
+		return
+	}
+	if err := s.redis.Set(ctx, claveTicket(ticket), u.ID, duracionTicket).Err(); err != nil {
+		errorInterno(w, err)
+		return
+	}
+
+	respuesta := map[string]any{
+		"codigo":         "otp_requerido",
+		"ticket":         ticket,
+		"email":          u.Email,
+		"correo_enviado": true,
+	}
+	if err := s.enviarCodigoOTP(ctx, u.Email, propositoLogin); err != nil {
+		var eOTP *errorOTP
+		if !errors.As(err, &eOTP) || eOTP.Status != http.StatusTooManyRequests {
+			s.redis.Del(ctx, claveTicket(ticket))
+			s.responderErrorOTP(w, err, "No se pudo enviar el código de inicio de sesión. Intenta de nuevo.")
+			return
+		}
+		// Se pidió un código hace poco y sigue vigente: se usa ese.
+		respuesta["correo_enviado"] = false
+		respuesta["aviso"] = eOTP.Mensaje
+		respuesta["reintentar_en"] = eOTP.ReintentarEn
+	}
+	responderJSON(w, http.StatusAccepted, respuesta)
+}
+
+// POST /login/verificar {ticket, codigo} -> segundo paso del inicio de sesión:
+// valida con otp el código enviado al correo y devuelve el JWT.
+func (s *Servidor) loginVerificar(w http.ResponseWriter, r *http.Request) {
+	var datos struct {
+		Ticket string `json:"ticket"`
+		Codigo string `json:"codigo"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
+		responderError(w, http.StatusBadRequest, "Datos inválidos.")
+		return
+	}
+	ctx := r.Context()
+
+	u, ok := s.usuarioDelTicket(w, r, datos.Ticket)
+	if !ok {
+		return
+	}
+	if err := s.validarCodigoOTP(ctx, u.Email, propositoLogin, datos.Codigo); err != nil {
+		s.responderErrorOTP(w, err, "No se pudo validar el código. Intenta de nuevo.")
+		return
+	}
+
+	// El ticket es de un solo uso: si otra petición lo consumió primero, esta no recibe sesión.
+	borrados, err := s.redis.Del(ctx, claveTicket(datos.Ticket)).Result()
+	if err != nil {
+		errorInterno(w, err)
+		return
+	}
+	if borrados == 0 {
+		responderTicketExpirado(w)
+		return
+	}
 	s.responderSesion(w, http.StatusOK, u)
+}
+
+// POST /login/reenviar {ticket} -> pide a otp otro código de inicio de sesión
+// (otp limita a uno cada 60 s y 5 por hora).
+func (s *Servidor) loginReenviar(w http.ResponseWriter, r *http.Request) {
+	var datos struct {
+		Ticket string `json:"ticket"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
+		responderError(w, http.StatusBadRequest, "Datos inválidos.")
+		return
+	}
+
+	u, ok := s.usuarioDelTicket(w, r, datos.Ticket)
+	if !ok {
+		return
+	}
+	if err := s.enviarCodigoOTP(r.Context(), u.Email, propositoLogin); err != nil {
+		s.responderErrorOTP(w, err, "No se pudo enviar el código. Intenta de nuevo.")
+		return
+	}
+	responderJSON(w, http.StatusAccepted, map[string]string{"mensaje": "Te enviamos un código nuevo."})
+}
+
+// Busca el usuario dueño de un ticket de login vigente. Si no hay, responde 401.
+func (s *Servidor) usuarioDelTicket(w http.ResponseWriter, r *http.Request, ticket string) (Usuario, bool) {
+	var u Usuario
+	if len(ticket) != 64 {
+		responderTicketExpirado(w)
+		return u, false
+	}
+	ctx := r.Context()
+
+	id, err := s.redis.Get(ctx, claveTicket(ticket)).Int()
+	if errors.Is(err, redis.Nil) {
+		responderTicketExpirado(w)
+		return u, false
+	}
+	if err != nil {
+		errorInterno(w, err)
+		return u, false
+	}
+
+	err = s.db.QueryRowContext(ctx,
+		`SELECT id, nombre, email, rol FROM usuarios WHERE id = $1`, id,
+	).Scan(&u.ID, &u.Nombre, &u.Email, &u.Rol)
+	if errors.Is(err, sql.ErrNoRows) {
+		responderTicketExpirado(w)
+		return u, false
+	}
+	if err != nil {
+		errorInterno(w, err)
+		return u, false
+	}
+	return u, true
+}
+
+func responderTicketExpirado(w http.ResponseWriter) {
+	responderJSON(w, http.StatusUnauthorized, map[string]string{
+		"error":  "Tu inicio de sesión expiró. Ingresa tu contraseña de nuevo.",
+		"codigo": "ticket_expirado",
+	})
+}
+
+// Ticket aleatorio de 256 bits en hexadecimal (64 caracteres).
+func generarTicket() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func claveTicket(ticket string) string {
+	return "login_pendiente:" + ticket
+}
+
+// Los 4xx de otp traen un mensaje apto para el usuario y se devuelven tal cual;
+// cualquier otro error se registra y se responde 502 con `mensaje`.
+func (s *Servidor) responderErrorOTP(w http.ResponseWriter, err error, mensaje string) {
+	var eOTP *errorOTP
+	if errors.As(err, &eOTP) {
+		responderJSON(w, eOTP.Status, eOTP)
+		return
+	}
+	log.Printf("Error llamando a otp: %v", err)
+	responderError(w, http.StatusBadGateway, mensaje)
 }
 
 // POST /logout (Authorization: Bearer <token>) -> revoca el token en Redis hasta que expire.

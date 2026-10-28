@@ -1,7 +1,9 @@
 // Microservicio de autenticación.
 //   PostgreSQL (esquema auth): usuarios permanentes.
-//   Redis: intentos fallidos de login y tokens revocados (logout).
-//   otp: envío y validación del código que verifica el correo al registrarse.
+//   Redis: intentos fallidos de login, tickets de login pendientes de código y
+//   tokens revocados (logout).
+//   otp: envío y validación de los códigos que verifican el correo al
+//   registrarse y que completan cada inicio de sesión.
 package main
 
 import (
@@ -79,6 +81,8 @@ func main() {
 	mux.HandleFunc("POST /verificar", srv.verificar)
 	mux.HandleFunc("POST /reenviar-codigo", srv.reenviarCodigo)
 	mux.HandleFunc("POST /login", srv.login)
+	mux.HandleFunc("POST /login/verificar", srv.loginVerificar)
+	mux.HandleFunc("POST /login/reenviar", srv.loginReenviar)
 	mux.HandleFunc("POST /logout", srv.logout)
 	mux.HandleFunc("GET /me", srv.me)
 	mux.HandleFunc("GET /usuarios", srv.listarUsuarios)

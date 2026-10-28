@@ -12,9 +12,13 @@ import (
 )
 
 // Cliente del microservicio otp: auth le pide enviar y validar los códigos
-// de verificación de correo. otp solo acepta tokens con rol "servicio".
+// de verificación de correo y de inicio de sesión. otp solo acepta tokens con
+// rol "servicio".
 
-const propositoRegistro = "registro"
+const (
+	propositoRegistro = "registro"
+	propositoLogin    = "login"
+)
 
 // Respuesta 4xx de otp (código incorrecto, expirado, esperar para reenviar...).
 // Su mensaje es apto para el usuario, así que auth la devuelve tal cual.
@@ -27,12 +31,12 @@ type errorOTP struct {
 
 func (e *errorOTP) Error() string { return fmt.Sprintf("otp %d: %s", e.Status, e.Mensaje) }
 
-func (s *Servidor) enviarCodigoOTP(ctx context.Context, email string) error {
-	return s.llamarOTP(ctx, "/otp/enviar", map[string]string{"email": email, "proposito": propositoRegistro})
+func (s *Servidor) enviarCodigoOTP(ctx context.Context, email, proposito string) error {
+	return s.llamarOTP(ctx, "/otp/enviar", map[string]string{"email": email, "proposito": proposito})
 }
 
-func (s *Servidor) validarCodigoOTP(ctx context.Context, email, codigo string) error {
-	return s.llamarOTP(ctx, "/otp/validar", map[string]string{"email": email, "proposito": propositoRegistro, "codigo": codigo})
+func (s *Servidor) validarCodigoOTP(ctx context.Context, email, proposito, codigo string) error {
+	return s.llamarOTP(ctx, "/otp/validar", map[string]string{"email": email, "proposito": proposito, "codigo": codigo})
 }
 
 // Devuelve nil si otp respondió 2xx, *errorOTP si respondió 4xx, y otro error

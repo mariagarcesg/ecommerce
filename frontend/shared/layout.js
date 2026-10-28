@@ -48,6 +48,11 @@ window.Sesion = (function () {
       const u = this.usuario();
       return !!u && u.rol === 'admin';
     },
+    // Página de inicio tras iniciar sesión (rutas relativas a /login/):
+    // el admin va al dashboard de analítica, el cliente al Home
+    paginaInicio() {
+      return this.esAdmin() ? '../admin/index.html#analitica' : '../home/index.html';
+    },
     iniciales(nombre) {
       const partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
       if (partes.length === 0) return '?';
@@ -269,7 +274,7 @@ window.Notificaciones = (function () {
   const header = document.createElement('header');
   header.className = 'navbar';
   header.innerHTML = `
-    <a class="navbar__marca-link" href="../catalogo/index.html">
+    <a class="navbar__marca-link" href="../home/index.html">
       <span class="navbar__logo-badge">E</span>
       <div class="navbar__marca-texto">
         <span class="navbar__marca-nombre">ECOMMERCE</span>

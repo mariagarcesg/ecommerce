@@ -28,8 +28,8 @@ const (
 )
 
 // Para qué se pide el código. Cada propósito tiene sus propias claves en
-// Redis, así un código de registro no sirve para otra acción.
-var propositosValidos = map[string]bool{"registro": true}
+// Redis, así un código de registro no sirve para iniciar sesión y viceversa.
+var propositosValidos = map[string]bool{"registro": true, "login": true}
 
 var formatoCodigo = regexp.MustCompile(`^\d{6}$`)
 
@@ -119,7 +119,7 @@ func (s *Servidor) enviar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.correo.enviarCodigo(datos.Email, codigo, duracionCodigo); err != nil {
+	if err := s.correo.enviarCodigo(datos.Email, codigo, datos.Proposito, duracionCodigo); err != nil {
 		log.Printf("No se pudo enviar el correo a %s: %v", datos.Email, err)
 		// Sin correo el código no sirve: se borra y se permite pedir otro enseguida.
 		s.redis.Del(ctx, clave("codigo", datos), clave("espera", datos))

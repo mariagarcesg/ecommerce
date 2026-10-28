@@ -10,21 +10,8 @@
   const inputEmail = document.getElementById('email');
   const inputPassword = document.getElementById('password');
 
-  // Botones de acceso rápido para pruebas
-  document.getElementById('btn-demo-admin')?.addEventListener('click', () => {
-    inputEmail.value = 'admin@test.com';
-    inputPassword.value = 'admin123';
-    window.Notificaciones.toast('Credenciales de Administrador cargadas.', 'info');
-  });
-
-  document.getElementById('btn-demo-cliente')?.addEventListener('click', () => {
-    inputEmail.value = 'cliente@test.com';
-    inputPassword.value = 'cliente123';
-    window.Notificaciones.toast('Credenciales de Cliente cargadas.', 'info');
-  });
-
   if (window.Sesion.usuario()) {
-    window.location.replace('../catalogo/index.html');
+    window.location.replace(window.Sesion.paginaInicio());
     return;
   }
 
@@ -83,10 +70,14 @@
       });
       const datos = await res.json().catch(() => ({}));
 
-      if (res.ok) {
-        window.Sesion.guardar(datos.token, datos.usuario);
-        window.Notificaciones.toast('Sesión iniciada con éxito.', 'exito');
-        setTimeout(() => { window.location.href = '../catalogo/index.html'; }, 500);
+      if (res.status === 202 && datos.codigo === 'otp_requerido') {
+        // Contraseña correcta: falta el código que llegó al correo. El ticket
+        // queda en sessionStorage (no en la URL) y lo usa verificar.html.
+        sessionStorage.setItem('ticketLogin', datos.ticket);
+        if (datos.aviso) sessionStorage.setItem('avisoLogin', datos.aviso);
+        else sessionStorage.removeItem('avisoLogin');
+        const espera = datos.reintentar_en ? `&espera=${datos.reintentar_en}` : '';
+        window.location.href = `verificar.html?modo=login&email=${encodeURIComponent(datos.email)}${espera}`;
         return;
       } else if (res.status === 403 && datos.codigo === 'correo_no_verificado') {
         // Contraseña correcta pero correo sin verificar: se pide un código nuevo

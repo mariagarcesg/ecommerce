@@ -8,7 +8,7 @@
   const boton = form.querySelector('button[type="submit"]');
 
   if (Sesion.usuario()) {
-    window.location.replace('../catalogo/index.html');
+    window.location.replace(Sesion.paginaInicio());
     return;
   }
 
