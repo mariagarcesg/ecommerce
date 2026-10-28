@@ -256,6 +256,9 @@ window.Notificaciones = (function () {
   const iconoAdmin = `<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-6h2zm0-8h-2V7h2z"></path></svg>`;
   const iconoReportes = `<svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20"></line><rect x="6" y="11" width="3" height="7"></rect><rect x="11" y="6" width="3" height="12"></rect><rect x="16" y="13" width="3" height="5"></rect></svg>`;
   const iconoCerrar = `<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+  const iconoCatalogo = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>`;
+  const iconoMenu = `<svg viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>`;
+  const iconoInicio = `<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>`;
 
   // Banner Promocional Cupón PROFE20
   const banner = document.createElement('aside');
@@ -289,8 +292,10 @@ window.Notificaciones = (function () {
     </form>
 
     <nav class="navbar__acciones">
-      <span class="navbar__saludo" id="nav-saludo" hidden></span>
-      
+      <a class="icono-boton" id="btn-nav-productos" href="../catalogo/index.html" title="Productos" aria-label="Productos">
+        ${iconoCatalogo}
+      </a>
+
       <!-- Botón Favoritos -->
       <button class="icono-boton" id="btn-abrir-favoritos" type="button" title="Lista de Deseos">
         ${iconoCorazon}
@@ -303,18 +308,24 @@ window.Notificaciones = (function () {
         <span class="badge-contador" id="conteo-carrito" hidden>0</span>
       </button>
 
-      <!-- Enlace Órdenes / Admin -->
-      <a class="icono-boton" id="btn-nav-ordenes" href="../ordenes/index.html" title="Mis Pedidos">
-        ${iconoOrdenes}
-      </a>
-
-      <a class="icono-boton" id="btn-nav-admin" data-solo-admin href="../admin/index.html" hidden title="Panel de Administración">
-        ${iconoAdmin}
-      </a>
-
-      <a class="icono-boton" id="btn-nav-reportes" data-solo-admin href="../admin/index.html#analitica" hidden title="Reportes">
+      <a class="icono-boton" id="btn-nav-reportes" data-solo-admin href="../admin/index.html#analitica" hidden title="Analítica" aria-label="Analítica">
         ${iconoReportes}
       </a>
+
+      <!-- Menú desplegable con el resto de las páginas -->
+      <div class="menu-nav" id="menu-nav">
+        <button class="icono-boton" id="btn-menu-nav" type="button" title="Más opciones"
+                aria-label="Más opciones" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-nav-lista">
+          ${iconoMenu}
+        </button>
+        <div class="menu-nav__lista" id="menu-nav-lista" role="menu" hidden>
+          <div class="menu-nav__cabecera" id="nav-saludo" hidden></div>
+          <a class="menu-nav__item" role="menuitem" href="../home/index.html">${iconoInicio}<span>Inicio</span></a>
+          <a class="menu-nav__item" role="menuitem" href="../ordenes/index.html">${iconoOrdenes}<span>Mis pedidos</span></a>
+          <a class="menu-nav__item" role="menuitem" href="../perfil/index.html" id="btn-nav-perfil" hidden>${iconoUsuario}<span>Mi perfil</span></a>
+          <a class="menu-nav__item" role="menuitem" href="../admin/index.html" id="btn-nav-admin" data-solo-admin hidden>${iconoAdmin}<span>Panel de administración</span></a>
+        </div>
+      </div>
 
       <!-- Avatar o Login -->
       <a class="avatar" id="nav-avatar" href="../perfil/index.html" hidden title="Mi Perfil"></a>
@@ -383,46 +394,55 @@ window.Notificaciones = (function () {
     <div class="modal">
       <div class="modal__cabecera">
         <h2 class="modal__titulo">Pasarela de Pagos y Confirmación</h2>
-        <button class="drawer__cerrar" style="color:var(--color-texto)" id="btn-cerrar-modal-pago">${iconoCerrar}</button>
+        <button class="drawer__cerrar" style="color:var(--color-texto)" id="btn-cerrar-modal-pago" type="button" title="Cerrar" aria-label="Cerrar pasarela de pagos">${iconoCerrar}</button>
       </div>
       <div class="modal__cuerpo">
         <div class="caja-info-pago">
           <strong>Reglas de Simulación de Pago Seguro:</strong>
           • Tarjeta terminada en <strong>1234</strong>: Pago aprobado instantáneamente.<br>
-          • Tarjeta terminada en <strong>0000</strong>: Pago rechazado y reversión automática sin cobro.
+          • Tarjeta terminada en <strong>0000</strong>: Pago rechazado y reversión automática sin cobro.<br>
+          Elige cuál usar con los botones bajo el número de tarjeta.
         </div>
-        <form id="form-checkout">
+        <form id="form-checkout" novalidate>
           <div class="form-grupo" style="margin-bottom:12px">
             <label for="chk-nombre">Nombre completo</label>
-            <input type="text" id="chk-nombre" required placeholder="Ej: Juan Pérez">
+            <input type="text" id="chk-nombre" maxlength="80" autocomplete="name" required placeholder="Ej: Juan Pérez">
+            <small class="form-grupo__error" id="chk-nombre-error"></small>
           </div>
           <div class="form-grupo" style="margin-bottom:12px">
             <label for="chk-direccion">Dirección de Entrega</label>
-            <input type="text" id="chk-direccion" required placeholder="Ej: Av. Principal 123, Apto 4B">
+            <input type="text" id="chk-direccion" maxlength="150" autocomplete="street-address" required placeholder="Ej: Av Principal 123 - Apto 4B">
+            <small class="form-grupo__error" id="chk-direccion-error"></small>
           </div>
           <div class="form-fila" style="margin-bottom:12px">
             <div class="form-grupo">
               <label for="chk-telefono">Teléfono</label>
-              <input type="tel" id="chk-telefono" required placeholder="Ej: 0414-1234567">
+              <input type="tel" id="chk-telefono" inputmode="numeric" maxlength="15" autocomplete="tel" required placeholder="Ej: 04141234567">
+              <small class="form-grupo__error" id="chk-telefono-error"></small>
             </div>
             <div class="form-grupo">
               <label for="chk-ciudad">Ciudad</label>
-              <input type="text" id="chk-ciudad" required placeholder="Ej: Caracas">
+              <input type="text" id="chk-ciudad" maxlength="60" autocomplete="address-level2" required placeholder="Ej: Caracas">
+              <small class="form-grupo__error" id="chk-ciudad-error"></small>
             </div>
           </div>
+          <!-- Datos de la tarjeta de prueba: solo lectura; se elige cuál usar con los botones -->
           <div class="form-grupo" style="margin-bottom:12px">
             <label for="chk-tarjeta">Número de Tarjeta de Prueba</label>
-            <input type="text" id="chk-tarjeta" maxlength="19" required placeholder="4532 •••• •••• 1234" value="4532000000001234">
-            <small style="color:var(--color-texto-suave);font-size:0.8rem">Usa una tarjeta terminada en 1234 (éxito) o 0000 (fallo).</small>
+            <input type="text" id="chk-tarjeta" readonly tabindex="-1" value="4532 0000 0000 1234">
+            <div class="chk-tarjetas" role="group" aria-label="Tarjeta de prueba">
+              <button type="button" class="chip chip--activo" data-tarjeta="4532 0000 0000 1234" aria-pressed="true">Aprobada (…1234)</button>
+              <button type="button" class="chip" data-tarjeta="4532 0000 0000 0000" aria-pressed="false">Rechazada (…0000)</button>
+            </div>
           </div>
           <div class="form-fila" style="margin-bottom:16px">
             <div class="form-grupo">
               <label for="chk-exp">Fecha Exp.</label>
-              <input type="text" id="chk-exp" placeholder="MM/AA" value="12/28">
+              <input type="text" id="chk-exp" readonly tabindex="-1" value="12/28">
             </div>
             <div class="form-grupo">
               <label for="chk-cvv">CVV</label>
-              <input type="text" id="chk-cvv" maxlength="4" placeholder="123" value="789">
+              <input type="text" id="chk-cvv" readonly tabindex="-1" value="789">
             </div>
           </div>
 
@@ -563,6 +583,13 @@ window.Notificaciones = (function () {
   document.getElementById('btn-cerrar-favoritos')?.addEventListener('click', cerrarDrawers);
   backdrop.addEventListener('click', cerrarDrawers);
   document.getElementById('btn-cerrar-modal-pago')?.addEventListener('click', cerrarDrawers);
+  // El modal de pago también se cierra con clic fuera de la ventana o con Escape
+  modalCheckout.addEventListener('click', (e) => {
+    if (e.target === modalCheckout) cerrarDrawers();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalCheckout.classList.contains('modal-backdrop--abierto')) cerrarDrawers();
+  });
 
   // Botón proceder al pago
   document.getElementById('btn-proceder-pago')?.addEventListener('click', () => {
@@ -570,6 +597,7 @@ window.Notificaciones = (function () {
       window.Notificaciones.toast('Agrega productos al carrito antes de pagar.', 'alerta');
       return;
     }
+    if (!window.Sesion.token()) return irALoginParaPagar();
     cerrarDrawers();
     document.getElementById('modal-checkout').classList.add('modal-backdrop--abierto');
   });
@@ -584,89 +612,173 @@ window.Notificaciones = (function () {
     renderizarCarrito();
   });
 
+  // ---------- Sin espacios dobles en ningún campo de la app ----------
+  // Al escribir o pegar, dos o más espacios seguidos quedan en uno. Las
+  // contraseñas no se tocan: un espacio doble puede ser parte de la clave.
+  const CAMPOS_DE_TEXTO = 'input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="url"], textarea';
+  document.addEventListener('input', (e) => {
+    const campo = e.target;
+    if (!campo.matches?.(CAMPOS_DE_TEXTO) || campo.readOnly) return;
+    const { value, selectionStart } = campo;
+    if (!/ {2,}/.test(value)) return;
+    const antesDelCursor = value.slice(0, selectionStart ?? value.length).replace(/ {2,}/g, ' ');
+    campo.value = value.replace(/ {2,}/g, ' ');
+    // email no admite setSelectionRange
+    try { campo.setSelectionRange(antesDelCursor.length, antesDelCursor.length); } catch {}
+  });
+
+  // ---------- Validación del formulario de pago ----------
+  // Cada campo filtra lo que se escribe o pega, y se vuelve a validar al pagar.
+  const LETRA = 'A-Za-zÁÉÍÓÚÜÑáéíóúüñ';
+  const camposCheckout = {
+    nombre: {
+      input: document.getElementById('chk-nombre'),
+      noPermitido: new RegExp(`[^${LETRA} ]`, 'g'),
+      aviso: 'Solo letras y espacios.',
+      validar: (v) => (new RegExp(`^[${LETRA}]{2,}( [${LETRA}]+)*$`).test(v) ? '' : 'Escribe tu nombre (solo letras).')
+    },
+    direccion: {
+      input: document.getElementById('chk-direccion'),
+      noPermitido: new RegExp(`[^${LETRA}0-9 _/-]`, 'g'),
+      aviso: 'Solo letras, números, espacios y los símbolos - _ /',
+      validar: (v) => (v.length >= 5 && new RegExp(`[${LETRA}]`).test(v) ? '' : 'Escribe la dirección de entrega (mínimo 5 caracteres).')
+    },
+    telefono: {
+      input: document.getElementById('chk-telefono'),
+      noPermitido: /\D/g,
+      aviso: 'Solo números, sin espacios ni guiones.',
+      validar: (v) => (/^\d{7,15}$/.test(v) ? '' : 'El teléfono debe tener entre 7 y 15 dígitos.')
+    },
+    ciudad: {
+      input: document.getElementById('chk-ciudad'),
+      noPermitido: new RegExp(`[^${LETRA} ]`, 'g'),
+      aviso: 'Solo letras y espacios.',
+      validar: (v) => (new RegExp(`^[${LETRA}]{2,}( [${LETRA}]+)*$`).test(v) ? '' : 'Escribe la ciudad (solo letras).')
+    }
+  };
+
+  function mostrarErrorCampo(campo, texto) {
+    document.getElementById(`${campo.input.id}-error`).textContent = texto;
+    campo.input.setAttribute('aria-invalid', texto ? 'true' : 'false');
+  }
+
+  Object.values(camposCheckout).forEach((campo) => {
+    campo.input.addEventListener('input', () => {
+      const { value, selectionStart } = campo.input;
+      const limpio = value.replace(campo.noPermitido, '');
+      if (limpio === value) {
+        if (campo.input.getAttribute('aria-invalid') === 'true') mostrarErrorCampo(campo, campo.validar(limpio.trim()));
+        return;
+      }
+      // Se quitan los caracteres no permitidos sin mover el cursor al final
+      const quitados = value.slice(0, selectionStart).length - value.slice(0, selectionStart).replace(campo.noPermitido, '').length;
+      campo.input.value = limpio;
+      campo.input.setSelectionRange(selectionStart - quitados, selectionStart - quitados);
+      mostrarErrorCampo(campo, campo.aviso);
+    });
+    campo.input.addEventListener('blur', () => {
+      // Espacios repetidos o en los extremos no cuentan
+      campo.input.value = campo.input.value.replace(/ {2,}/g, ' ').trim();
+    });
+  });
+
+  function validarCheckout() {
+    let primeroInvalido = null;
+    Object.values(camposCheckout).forEach((campo) => {
+      campo.input.value = campo.input.value.replace(/ {2,}/g, ' ').trim();
+      const error = campo.validar(campo.input.value);
+      mostrarErrorCampo(campo, error);
+      if (error && !primeroInvalido) primeroInvalido = campo.input;
+    });
+    primeroInvalido?.focus();
+    return !primeroInvalido;
+  }
+
+  // Botones de tarjeta de prueba: los campos de tarjeta son de solo lectura
+  document.querySelectorAll('.chk-tarjetas [data-tarjeta]').forEach((boton) => {
+    boton.addEventListener('click', () => {
+      document.getElementById('chk-tarjeta').value = boton.dataset.tarjeta;
+      document.querySelectorAll('.chk-tarjetas [data-tarjeta]').forEach((b) => {
+        b.classList.toggle('chip--activo', b === boton);
+        b.setAttribute('aria-pressed', String(b === boton));
+      });
+    });
+  });
+
   // Procesamiento del Checkout (IDEA 03 - Reglas 1234 y 0000)
   document.getElementById('form-checkout')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const tarjeta = document.getElementById('chk-tarjeta').value.replace(/\s+/g, '');
-    const nombre = document.getElementById('chk-nombre').value;
-    const direccion = document.getElementById('chk-direccion').value;
-    const items = window.Carrito.obtenerItems();
-    const total = window.Carrito.total();
+    if (!validarCheckout()) return;
+    const token = window.Sesion.token();
+    if (!token) return irALoginParaPagar();
 
+    const tarjeta = document.getElementById('chk-tarjeta').value.replace(/\s+/g, '');
     const btnSubmit = document.getElementById('btn-confirmar-pago');
+    const restaurarBoton = () => {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Pagar y Confirmar Pedido';
+    };
     btnSubmit.disabled = true;
     btnSubmit.textContent = 'Procesando transacción segura...';
 
     await new Promise(r => setTimeout(r, 1200));
 
     // Regla de simulación de pagos (Slide 5):
-    // Termina en 0000 -> Fallo y reversión
-    // Termina en 1234 -> Éxito
+    // Termina en 0000 -> Fallo y reversión: no se registra nada
+    // Termina en 1234 -> Éxito: se registra la venta
     if (tarjeta.endsWith('0000')) {
-      btnSubmit.disabled = false;
-      btnSubmit.textContent = 'Pagar y Confirmar Pedido';
+      restaurarBoton();
       window.Notificaciones.toast('❌ Pago rechazado: Tarjeta declinada. Reversión automática de fondos sin cobro.', 'alerta');
       return;
     }
 
-    // Si termina en 1234 (o cualquier otra válida): Aprobado
-    const ordenId = Math.floor(100000 + Math.random() * 900000);
-    const usuario = window.Sesion.usuario();
-    const token = window.Sesion.token();
-
-    const nuevaOrden = {
-      id: ordenId,
-      usuarioId: usuario ? usuario.id : 1,
-      clienteNombre: nombre,
-      direccion,
-      total,
-      fechaCreacion: new Date().toISOString(),
-      estado: 'PAGADO',
-      tarjetaUltimos4: tarjeta.slice(-4),
-      detalles: items.map(it => ({
-        productoId: String(it.id),
-        productoNombre: it.nombre,
-        precioUnitario: it.precio,
-        cantidad: it.cantidad
-      }))
-    };
-
-    // Intentar enviar al microservicio Java ordenes
+    // Pago aprobado: POST /api/ordenes registra la venta (estado PAGADA).
+    // ordenes toma el comprador del token y nombres/precios del catálogo, y descuenta el stock.
+    let orden;
     try {
-      await fetch('/api/ordenes', {
+      const res = await fetch('/api/ordenes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          usuarioId: nuevaOrden.usuarioId,
-          detalles: nuevaOrden.detalles
+          productos: window.Carrito.obtenerItems().map(it => ({ productoId: String(it.id), cantidad: it.cantidad })),
+          clienteNombre: document.getElementById('chk-nombre').value,
+          telefono: document.getElementById('chk-telefono').value,
+          direccion: document.getElementById('chk-direccion').value,
+          ciudad: document.getElementById('chk-ciudad').value,
+          tarjetaUltimos4: tarjeta.slice(-4),
+          cupon: window.Carrito.obtenerCupon()?.codigo || null
         })
       });
+      const datos = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        restaurarBoton();
+        return irALoginParaPagar(datos.error);
+      }
+      if (!res.ok) throw new Error(datos.error || `Error ${res.status} al registrar la compra.`);
+      orden = datos;
     } catch (err) {
-      console.log('Orden guardada localmente (Java offline o standalone mode)', err);
+      // Sin orden no hay venta: el carrito se conserva para reintentar
+      restaurarBoton();
+      window.Notificaciones.toast(`No se completó la compra: ${err.message}`, 'alerta');
+      return;
     }
 
-    // Persistir orden en historial local
-    try {
-      const ordenesPrev = JSON.parse(localStorage.getItem('ecommerce_ordenes')) || [];
-      ordenesPrev.unshift(nuevaOrden);
-      localStorage.setItem('ecommerce_ordenes', JSON.stringify(ordenesPrev));
-    } catch (e) { console.warn(e); }
-
-    // Limpiar carrito
     window.Carrito.limpiar();
     cerrarDrawers();
-    btnSubmit.disabled = false;
-    btnSubmit.textContent = 'Pagar y Confirmar Pedido';
-
-    window.Notificaciones.toast(`🎉 ¡Pago Aprobado! Orden #${ordenId} generada exitosamente.`, 'exito');
+    restaurarBoton();
+    window.Notificaciones.toast(`🎉 ¡Pago Aprobado! Orden #${orden.id} por $${Number(orden.total).toFixed(2)} registrada.`, 'exito');
 
     setTimeout(() => {
       window.location.href = '../ordenes/index.html';
     }, 1500);
   });
+
+  // Comprar exige sesión: cada venta queda a nombre de quien la hizo
+  function irALoginParaPagar(mensaje) {
+    cerrarDrawers();
+    window.Notificaciones.toast(mensaje || 'Inicia sesión para completar tu compra. Tu carrito se conserva.', 'info');
+    setTimeout(() => { window.location.href = '../login/index.html'; }, 1400);
+  }
 
   // Manejo de Sesión en Navbar
   function pintarSesion() {
@@ -679,10 +791,16 @@ window.Notificaciones = (function () {
     const btnLogout = document.getElementById('btn-nav-logout');
     const btnAdmin = document.getElementById('btn-nav-admin');
     const btnReportes = document.getElementById('btn-nav-reportes');
+    const btnPerfil = document.getElementById('btn-nav-perfil');
+
+    if (btnPerfil) btnPerfil.hidden = !usuario;
 
     if (usuario) {
       if (saludo) {
-        saludo.textContent = `Hola, ${usuario.nombre.split(' ')[0]}`;
+        // Cabecera del menú desplegable: nombre y correo de la sesión
+        saludo.innerHTML = '<strong></strong><small></small>';
+        saludo.querySelector('strong').textContent = `Hola, ${usuario.nombre.split(' ')[0]}`;
+        saludo.querySelector('small').textContent = usuario.email || '';
         saludo.hidden = false;
       }
       if (avatar) {
@@ -702,6 +820,46 @@ window.Notificaciones = (function () {
       if (btnReportes) btnReportes.hidden = true;
     }
   }
+
+  // Menú desplegable del navbar: abre con clic, cierra con clic afuera o Escape
+  const menuNav = document.getElementById('menu-nav');
+  const btnMenuNav = document.getElementById('btn-menu-nav');
+  const listaMenuNav = document.getElementById('menu-nav-lista');
+
+  function abrirMenuNav(abrir) {
+    listaMenuNav.hidden = !abrir;
+    btnMenuNav.setAttribute('aria-expanded', String(abrir));
+    btnMenuNav.classList.toggle('icono-boton--activo', abrir);
+  }
+
+  btnMenuNav.addEventListener('click', () => {
+    abrirMenuNav(listaMenuNav.hidden);
+    if (!listaMenuNav.hidden) listaMenuNav.querySelector('.menu-nav__item:not([hidden])')?.focus();
+  });
+  document.addEventListener('click', (e) => {
+    if (!listaMenuNav.hidden && !menuNav.contains(e.target)) abrirMenuNav(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (listaMenuNav.hidden) return;
+    if (e.key === 'Escape') {
+      abrirMenuNav(false);
+      btnMenuNav.focus();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const items = [...listaMenuNav.querySelectorAll('.menu-nav__item:not([hidden])')];
+      const actual = items.indexOf(document.activeElement);
+      const paso = e.key === 'ArrowDown' ? 1 : -1;
+      items[(actual + paso + items.length) % items.length]?.focus();
+    }
+  });
+
+  // Marca la página actual en el navbar y en el menú
+  const carpetaActual = window.location.pathname.split('/').filter(Boolean)[0] || 'home';
+  document.querySelectorAll('.navbar__acciones a[href^="../"]').forEach((enlace) => {
+    const [ruta, ancla] = enlace.getAttribute('href').slice(3).split('#');
+    const esActual = ruta.split('/')[0] === carpetaActual && (ancla ? window.location.hash === `#${ancla}` : true);
+    if (esActual && !enlace.classList.contains('avatar')) enlace.setAttribute('aria-current', 'page');
+  });
 
   document.getElementById('btn-nav-logout')?.addEventListener('click', async () => {
     const token = window.Sesion.token();
