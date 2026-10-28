@@ -65,6 +65,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-una-clave-larga}
       PORT: ${CATALOGO_PORT:-3000}
       CATALOGO_PORT: ${CATALOGO_PORT:-3000}
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - catalogo-uploads:/app/uploads   # fotos subidas desde el panel admin
     depends_on:
       mongo:
         condition: service_healthy
@@ -173,3 +176,4 @@ volumes:
   db-data:
   mongo-data:
   redis-data:
+  catalogo-uploads:
