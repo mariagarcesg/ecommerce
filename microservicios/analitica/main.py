@@ -111,17 +111,17 @@ def requerir_admin(authorization: Optional[str] = Header(None)) -> dict:
 @app.get("/reportes")
 def obtener_reportes(_admin: dict = Depends(requerir_admin)):
     """
-    Métricas para el panel admin: conteos reales desde catálogo y auth
-    (None si el servicio no responde) y ventas de la capa de datos simulada.
+    Métricas para el panel admin, solo con datos reales de catálogo, auth y
+    ordenes (None si el servicio no responde). Las ventas simuladas de
+    mock_data ya no se publican aquí.
     """
     return {
         "productos_registrados": analytics_service.obtener_cantidad_productos_registrados(),
         "usuarios_activos": analytics_service.obtener_cantidad_usuarios_activos(),
-        "total_compras": analytics_service.obtener_total_compras(),
-        "ingresos_totales": round(analytics_service.obtener_ingresos_totales(), 2),
-        "compras_por_mes": analytics_service.obtener_compras_por_mes().to_dict(orient="records"),
-        "productos_mas_vendidos": analytics_service.obtener_productos_mas_vendidos().to_dict(orient="records"),
-        "datos_ventas_simulados": True,
+        "ultimo_producto_agregado": analytics_service.obtener_ultimo_producto_agregado(),
+        "producto_mas_vendido": analytics_service.obtener_producto_mas_vendido(),
+        "productos_por_categoria": analytics_service.obtener_productos_por_categoria().to_dict(orient="records"),
+        "usuarios_por_rol": analytics_service.obtener_usuarios_por_rol().to_dict(orient="records"),
     }
 
 if __name__ == "__main__":

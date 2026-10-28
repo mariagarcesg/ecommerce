@@ -26,18 +26,20 @@ JWT_SECRET = os.getenv("JWT_SECRET", "")
 # ---------------------------------------------------------------------------
 
 def _usuarios_activos() -> pd.DataFrame | None:
-    """Usuarios registrados en auth: [id, nombre, email, rol].
+    """Usuarios activos de auth: [id, nombre, email, rol].
 
-    La tabla usuarios de auth no tiene columna de estado: todo usuario
-    registrado se considera activo. Si se agrega `activo`, se respeta.
+    auth devuelve `activo` por usuario: las cuentas desactivadas por el admin
+    no cuentan como activas.
     """
     usuarios = servicios.obtener_usuarios()
     if usuarios is None:
         return None
-    df = pd.DataFrame(usuarios, columns=["id", "nombre", "email", "rol"])
+    df = pd.DataFrame(usuarios)
+    if df.empty:
+        return pd.DataFrame(columns=["id", "nombre", "email", "rol"])
     if "activo" in df.columns:
         df = df[df["activo"] == True]  # noqa: E712
-    return df
+    return df[["id", "nombre", "email", "rol"]].reset_index(drop=True)
 
 
 def obtener_cantidad_usuarios_activos() -> int | None:
@@ -102,6 +104,69 @@ def _productos_con_categoria() -> pd.DataFrame | None:
         ],
         columns=["producto", "categoria", "precio", "stock"],
     )
+
+
+def _fecha_creacion(object_id: str | None) -> pd.Timestamp | None:
+    """Momento en que MongoDB creó el documento: los primeros 8 caracteres
+    hexadecimales del _id son su timestamp en segundos."""
+    try:
+        return pd.Timestamp(int(str(object_id)[:8], 16), unit="s", tz="UTC")
+    except (TypeError, ValueError):
+        return None
+
+
+def obtener_ultimo_producto_agregado() -> dict | None:
+    """El producto creado más recientemente en catálogo (None si no hay o no responde).
+
+    Los productos no guardan fecha de alta; se usa la que va dentro de su _id.
+    """
+    productos = servicios.obtener_productos()
+    if not productos:
+        return None
+    con_fecha = [(p, _fecha_creacion(p.get("_id"))) for p in productos]
+    con_fecha = [(p, fecha) for p, fecha in con_fecha if fecha is not None]
+    if not con_fecha:
+        return None
+    producto, fecha = max(con_fecha, key=lambda par: par[1])
+    return {
+        "producto": producto.get("name"),
+        "categoria": _nombre_categoria(producto.get("category")) or "Sin categoría",
+        "precio": producto.get("price", 0),
+        "imagen": producto.get("imagen"),
+        "agregado_en": fecha.isoformat(),
+    }
+
+
+def obtener_producto_mas_vendido() -> dict | None:
+    """Producto con más unidades vendidas según las órdenes reales (todas pagadas).
+
+    None si ordenes no responde o aún no hay ventas. La foto y la categoría se
+    toman del catálogo actual; el nombre, de la venta (por si el producto se borró).
+    """
+    ordenes = servicios.obtener_ordenes()
+    if not ordenes:
+        return None
+    lineas = pd.DataFrame(
+        [
+            {"producto_id": d.get("productoId"), "producto": d.get("productoNombre"), "unidades": d.get("cantidad", 0)}
+            for o in ordenes
+            for d in o.get("detalles") or []
+        ],
+        columns=["producto_id", "producto", "unidades"],
+    )
+    if lineas.empty:
+        return None
+    vendidos = lineas.groupby("producto_id").agg(producto=("producto", "last"), unidades=("unidades", "sum"))
+    # En empate gana el de nombre alfabéticamente primero, para que el resultado sea estable
+    mejor = vendidos.reset_index().sort_values(["unidades", "producto"], ascending=[False, True]).iloc[0]
+
+    en_catalogo = next((p for p in servicios.obtener_productos() or [] if p.get("_id") == mejor["producto_id"]), {})
+    return {
+        "producto": en_catalogo.get("name") or mejor["producto"],
+        "unidades": int(mejor["unidades"]),
+        "categoria": _nombre_categoria(en_catalogo.get("category")) or "Sin categoría",
+        "imagen": en_catalogo.get("imagen"),
+    }
 
 
 def obtener_cantidad_productos_registrados() -> int | None:
