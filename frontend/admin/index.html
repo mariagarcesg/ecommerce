@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Panel de Administración | ECOMMERCE</title>
-  <link rel="stylesheet" href="../shared/styles.css?v=14">
+  <link rel="stylesheet" href="../shared/styles.css?v=15">
 </head>
 <body>
 
@@ -241,7 +241,8 @@
           </div>
           <div class="form-grupo">
             <label for="usr-password" id="usr-password-label">Contraseña temporal</label>
-            <input type="password" id="usr-password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+            <input type="password" id="usr-password" minlength="8" maxlength="16" autocomplete="new-password" placeholder="8 a 16, con mayúscula, minúscula y número">
+            <small class="admin-form__ayuda">8 a 16 caracteres, con una mayúscula, una minúscula y un número.</small>
           </div>
         </div>
         <div class="admin-form__checks" id="usr-estados" hidden>
@@ -377,7 +378,7 @@
     </section>
   </main>
 
-  <script src="../shared/layout.js?v=15"></script>
-  <script src="admin.js?v=14"></script>
+  <script src="../shared/layout.js?v=18"></script>
+  <script src="admin.js?v=15"></script>
 </body>
 </html>

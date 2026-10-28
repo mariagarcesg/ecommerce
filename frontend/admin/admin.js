@@ -635,7 +635,7 @@
     const email = document.getElementById('usr-email');
     document.getElementById('form-usuario-titulo').textContent = usuario ? `Editar "${usuario.nombre}"` : 'Nuevo usuario';
     document.getElementById('usr-password-label').textContent = usuario ? 'Nueva contraseña (opcional)' : 'Contraseña temporal';
-    document.getElementById('usr-password').placeholder = usuario ? 'Déjala vacía para no cambiarla' : 'Mínimo 8 caracteres';
+    document.getElementById('usr-password').placeholder = usuario ? 'Déjala vacía para no cambiarla' : '8 a 16, con mayúscula, minúscula y número';
     document.getElementById('usr-email-nota').textContent = usuario ? '(no se puede cambiar)' : '(no se puede cambiar después)';
     document.getElementById('usr-estados').hidden = !usuario;
     email.disabled = !!usuario;
@@ -678,7 +678,8 @@
     let error = '';
     if (!nombre) error = 'Escribe el nombre.';
     else if (!usuarioEditando && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) error = 'El correo no es válido.';
-    else if ((!usuarioEditando || password) && password.length < 8) error = 'La contraseña debe tener al menos 8 caracteres.';
+    // Mismas reglas que el registro; al editar, vacía = no se cambia
+    else if (!usuarioEditando || password) error = Sesion.errorContrasena(password);
     if (error) {
       errorUsuario.textContent = error;
       return;

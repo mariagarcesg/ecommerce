@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/redis/go-redis/v9"
@@ -73,8 +75,8 @@ func (s *Servidor) registro(w http.ResponseWriter, r *http.Request) {
 	case !emailValido(datos.Email):
 		responderError(w, http.StatusBadRequest, "El correo no es válido.")
 		return
-	case len(datos.Password) < 8 || len(datos.Password) > 72: // bcrypt solo usa los primeros 72 bytes
-		responderError(w, http.StatusBadRequest, "La contraseña debe tener entre 8 y 72 caracteres.")
+	case validarContrasena(datos.Password) != "":
+		responderError(w, http.StatusBadRequest, validarContrasena(datos.Password))
 		return
 	}
 
@@ -563,8 +565,8 @@ func (s *Servidor) crearUsuario(w http.ResponseWriter, r *http.Request) {
 	case !emailValido(datos.Email):
 		responderError(w, http.StatusBadRequest, "El correo no es válido.")
 		return
-	case len(datos.Password) < 8 || len(datos.Password) > 72:
-		responderError(w, http.StatusBadRequest, "La contraseña debe tener entre 8 y 72 caracteres.")
+	case validarContrasena(datos.Password) != "":
+		responderError(w, http.StatusBadRequest, validarContrasena(datos.Password))
 		return
 	}
 	if !s.validarRol(w, r, datos.Rol) {
@@ -626,8 +628,8 @@ func (s *Servidor) actualizarUsuario(w http.ResponseWriter, r *http.Request) {
 	case datos.Nombre == "" || len(datos.Nombre) > 100:
 		responderError(w, http.StatusBadRequest, "El nombre es obligatorio (máximo 100 caracteres).")
 		return
-	case datos.Password != "" && (len(datos.Password) < 8 || len(datos.Password) > 72):
-		responderError(w, http.StatusBadRequest, "La contraseña debe tener entre 8 y 72 caracteres.")
+	case datos.Password != "" && validarContrasena(datos.Password) != "":
+		responderError(w, http.StatusBadRequest, validarContrasena(datos.Password))
 		return
 	// Quien edita es un admin activo y no puede dejar de serlo: así nunca se
 	// queda la tienda sin administradores.
@@ -959,6 +961,29 @@ func (s *Servidor) responderSesion(w http.ResponseWriter, status int, u Usuario)
 
 func normalizarEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
+}
+
+// Reglas de toda contraseña nueva (registro, cuenta creada por el admin o
+// restablecida): 8 a 16 caracteres, al menos una mayúscula, una minúscula y un
+// número, sin espacios al inicio ni al final ni espacios dobles. Devuelve el error o "" si es válida.
+// El login no la aplica: las claves anteriores a estas reglas siguen sirviendo.
+func validarContrasena(clave string) string {
+	largo := utf8.RuneCountInString(clave) // caracteres, no bytes (bcrypt admite hasta 72 bytes)
+	switch {
+	case largo < 8 || largo > 16:
+		return "La contraseña debe tener entre 8 y 16 caracteres."
+	case strings.TrimSpace(clave) != clave:
+		return "La contraseña no puede empezar ni terminar con espacios."
+	case strings.Contains(clave, "  "):
+		return "La contraseña no puede tener espacios dobles."
+	case !strings.ContainsFunc(clave, unicode.IsUpper):
+		return "La contraseña debe tener al menos una letra mayúscula."
+	case !strings.ContainsFunc(clave, unicode.IsLower):
+		return "La contraseña debe tener al menos una letra minúscula."
+	case !strings.ContainsFunc(clave, unicode.IsDigit):
+		return "La contraseña debe tener al menos un número."
+	}
+	return ""
 }
 
 func emailValido(email string) bool {

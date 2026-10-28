@@ -48,10 +48,28 @@ window.Sesion = (function () {
       const u = this.usuario();
       return !!u && u.rol === 'admin';
     },
-    // Página de inicio tras iniciar sesión (rutas relativas a /login/):
-    // el admin va al dashboard de analítica, el cliente al Home
+    // Página de inicio tras iniciar sesión (ruta relativa a /login/): todos van
+    // al Home; el admin llega al panel desde el navbar (Analítica / menú)
     paginaInicio() {
-      return this.esAdmin() ? '../admin/index.html#analitica' : '../home/index.html';
+      return '../home/index.html';
+    },
+    // Reglas de toda contraseña nueva (las mismas que valida auth): devuelve
+    // cada regla con si se cumple, para mostrarlas como lista mientras se escribe
+    reglasContrasena(clave) {
+      const largo = [...clave].length;
+      return [
+        { texto: 'Entre 8 y 16 caracteres', ok: largo >= 8 && largo <= 16 },
+        { texto: 'Una letra mayúscula', ok: /\p{Lu}/u.test(clave) },
+        { texto: 'Una letra minúscula', ok: /\p{Ll}/u.test(clave) },
+        { texto: 'Un número', ok: /\d/.test(clave) },
+        { texto: 'Sin espacios al inicio ni al final', ok: clave === clave.trim() },
+        { texto: 'Sin espacios dobles', ok: !clave.includes('  ') }
+      ];
+    },
+    errorContrasena(clave) {
+      if (!clave) return 'Ingresa una contraseña.';
+      const pendiente = this.reglasContrasena(clave).find(r => !r.ok);
+      return pendiente ? `La contraseña necesita: ${pendiente.texto.toLowerCase()}.` : '';
     },
     iniciales(nombre) {
       const partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
@@ -613,9 +631,10 @@ window.Notificaciones = (function () {
   });
 
   // ---------- Sin espacios dobles en ningún campo de la app ----------
-  // Al escribir o pegar, dos o más espacios seguidos quedan en uno. Las
-  // contraseñas no se tocan: un espacio doble puede ser parte de la clave.
-  const CAMPOS_DE_TEXTO = 'input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="url"], textarea';
+  // Al escribir o pegar, dos o más espacios seguidos quedan en uno. En login y
+  // registro también las contraseñas (auth rechaza claves nuevas con espacios
+  // dobles); en el resto de la app las contraseñas no se tocan.
+  const CAMPOS_DE_TEXTO = 'input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="url"], textarea, #form-login input[type="password"], #form-registro input[type="password"]';
   document.addEventListener('input', (e) => {
     const campo = e.target;
     if (!campo.matches?.(CAMPOS_DE_TEXTO) || campo.readOnly) return;
@@ -625,7 +644,7 @@ window.Notificaciones = (function () {
     campo.value = value.replace(/ {2,}/g, ' ');
     // email no admite setSelectionRange
     try { campo.setSelectionRange(antesDelCursor.length, antesDelCursor.length); } catch {}
-  });
+  }, true); // captura: corre antes que los listeners de cada campo, que ya ven el valor limpio
 
   // ---------- Validación del formulario de pago ----------
   // Cada campo filtra lo que se escribe o pega, y se vuelve a validar al pagar.

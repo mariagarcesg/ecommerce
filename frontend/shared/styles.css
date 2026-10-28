@@ -1259,6 +1259,23 @@ button, input, select, textarea {
   gap: 14px;
 }
 
+/* Requisitos de la contraseña, marcados mientras se escribe (registro) */
+.reglas-clave {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 2px 12px;
+  font-size: 0.78rem;
+  color: var(--color-texto-mutado);
+}
+
+.reglas-clave__ok {
+  color: var(--color-exito);
+  font-weight: 600;
+}
+
 /* Error bajo un campo (formulario de pago) */
 .form-grupo__error {
   min-height: 1.1em;
