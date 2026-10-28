@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio | ECOMMERCE Tecnología</title>
+  <link rel="stylesheet" href="../shared/styles.css?v=6">
+  <link rel="stylesheet" href="home.css?v=1">
+</head>
+<body>
+
+  <main class="home">
+
+    <!-- ====================================================================
+         HERO
+         ==================================================================== -->
+    <section class="home-hero">
+      <div class="home-hero__fondo" aria-hidden="true">
+        <span class="home-hero__orbe home-hero__orbe--1"></span>
+        <span class="home-hero__orbe home-hero__orbe--2"></span>
+        <span class="home-hero__rejilla"></span>
+      </div>
+
+      <div class="home-hero__contenido">
+        <div class="home-hero__texto">
+          <span class="home-etiqueta home-aparecer">⚡ Nueva temporada tech 2026</span>
+          <h1 class="home-hero__titulo home-aparecer" style="--retraso:80ms">
+            Tecnología que <span class="home-hero__resaltado">se siente</span> en cada detalle
+          </h1>
+          <p class="home-hero__bajada home-aparecer" style="--retraso:160ms">
+            Smartphones, laptops, audio y accesorios seleccionados por expertos.
+            Envío rápido, garantía real y soporte que sí responde.
+          </p>
+          <div class="home-hero__acciones home-aparecer" style="--retraso:240ms">
+            <a class="boton home-boton-grande" href="../catalogo/index.html">Explorar catálogo →</a>
+            <a class="boton boton--secundario home-boton-grande" href="#oferta">Ver oferta del día</a>
+          </div>
+
+          <dl class="home-hero__cifras home-aparecer" style="--retraso:320ms">
+            <div><dt><span data-contador="12000" data-sufijo="+">0</span></dt><dd>clientes felices</dd></div>
+            <div><dt><span data-contador="48" data-sufijo="h">0</span></dt><dd>entrega máxima</dd></div>
+            <div><dt><span data-contador="4.9" data-decimales="1" data-sufijo="★">0</span></dt><dd>valoración media</dd></div>
+          </dl>
+        </div>
+
+        <div class="home-hero__vitrina home-aparecer" style="--retraso:200ms" aria-hidden="true">
+          <div class="home-flotante home-flotante--laptop">
+            <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=80" alt="">
+          </div>
+          <div class="home-flotante home-flotante--telefono">
+            <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&q=80" alt="">
+          </div>
+          <div class="home-flotante home-flotante--audio">
+            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80" alt="">
+          </div>
+          <div class="home-chip-flotante home-chip-flotante--1">🔋 Batería 18h</div>
+          <div class="home-chip-flotante home-chip-flotante--2">🎧 Noise Cancelling</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         CINTA DE BENEFICIOS (marquesina)
+         ==================================================================== -->
+    <section class="home-cinta" aria-label="Beneficios">
+      <div class="home-cinta__pista">
+        <!-- El contenido se duplica en home.js para el desplazamiento infinito -->
+        <ul class="home-cinta__lista">
+          <li>🚚 Envío gratis desde $99</li>
+          <li>🛡️ Garantía oficial de 12 meses</li>
+          <li>💳 Pago 100% seguro</li>
+          <li>🔄 30 días para devoluciones</li>
+          <li>💬 Soporte técnico 24/7</li>
+          <li>🎁 Cupón PROFE20: 20% OFF</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         CATEGORÍAS
+         ==================================================================== -->
+    <section class="home-seccion">
+      <header class="home-seccion__cabecera home-revelar">
+        <span class="home-etiqueta">Categorías</span>
+        <h2 class="home-seccion__titulo">Encuentra tu próximo equipo</h2>
+        <p class="home-seccion__bajada">Todo lo que necesitas para trabajar, jugar y crear, en un solo lugar.</p>
+      </header>
+
+      <div class="home-categorias">
+        <a class="home-categoria home-categoria--grande home-revelar" href="../catalogo/index.html?q=laptop">
+          <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900&q=80" alt="" loading="lazy">
+          <div class="home-categoria__info">
+            <h3>Laptops</h3>
+            <p>Potencia ultradelgada para crear sin límites</p>
+            <span class="home-categoria__flecha">Ver laptops →</span>
+          </div>
+        </a>
+        <a class="home-categoria home-revelar" style="--retraso:80ms" href="../catalogo/index.html?q=smartphone">
+          <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&q=80" alt="" loading="lazy">
+          <div class="home-categoria__info">
+            <h3>Smartphones</h3>
+            <p>Pantallas 120Hz y cámaras de 108MP</p>
+            <span class="home-categoria__flecha">Ver teléfonos →</span>
+          </div>
+        </a>
+        <a class="home-categoria home-revelar" style="--retraso:160ms" href="../catalogo/index.html?q=aud">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80" alt="" loading="lazy">
+          <div class="home-categoria__info">
+            <h3>Audio</h3>
+            <p>Sonido inmersivo y cancelación de ruido</p>
+            <span class="home-categoria__flecha">Ver audio →</span>
+          </div>
+        </a>
+        <a class="home-categoria home-revelar" style="--retraso:240ms" href="../catalogo/index.html?q=mouse">
+          <img src="https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&q=80" alt="" loading="lazy">
+          <div class="home-categoria__info">
+            <h3>Periféricos</h3>
+            <p>Ergonomía para largas jornadas</p>
+            <span class="home-categoria__flecha">Ver periféricos →</span>
+          </div>
+        </a>
+        <a class="home-categoria home-revelar" style="--retraso:320ms" href="../catalogo/index.html?q=funda">
+          <img src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600&q=80" alt="" loading="lazy">
+          <div class="home-categoria__info">
+            <h3>Accesorios</h3>
+            <p>Protección y estilo para tus equipos</p>
+            <span class="home-categoria__flecha">Ver accesorios →</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         PRODUCTOS DESTACADOS (desde /api/catalogo/products)
+         ==================================================================== -->
+    <section class="home-seccion">
+      <header class="home-seccion__cabecera home-seccion__cabecera--fila home-revelar">
+        <div>
+          <span class="home-etiqueta">Lo más buscado</span>
+          <h2 class="home-seccion__titulo">Productos destacados</h2>
+        </div>
+        <a class="boton boton--secundario boton--sm" href="../catalogo/index.html">Ver todo el catálogo →</a>
+      </header>
+
+      <div class="home-destacados" id="home-destacados">
+        <!-- Tarjetas generadas por home.js -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         OFERTA DEL DÍA
+         ==================================================================== -->
+    <section class="home-oferta home-revelar" id="oferta">
+      <div class="home-oferta__imagen">
+        <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1000&q=80" alt="Laptop Pro Ultradelgada 16 pulgadas" loading="lazy">
+        <span class="home-oferta__sello">-20%</span>
+      </div>
+      <div class="home-oferta__texto">
+        <span class="home-etiqueta home-etiqueta--clara">🔥 Oferta del día</span>
+        <h2>Laptop Pro Ultradelgada 16"</h2>
+        <ul class="home-oferta__specs">
+          <li>Procesador de 12 núcleos</li>
+          <li>Pantalla 3K Liquid Retina</li>
+          <li>Hasta 18 horas de batería</li>
+        </ul>
+        <p class="home-oferta__precio">
+          <span class="home-oferta__precio-nuevo">$1,039.20</span>
+          <span class="home-oferta__precio-viejo">$1,299.00</span>
+        </p>
+        <p class="home-oferta__cupon">con el cupón <strong>PROFE20</strong> en tu carrito</p>
+
+        <div class="home-cuenta" aria-label="Tiempo restante de la oferta">
+          <div><span id="cuenta-horas">00</span><small>horas</small></div>
+          <div><span id="cuenta-minutos">00</span><small>min</small></div>
+          <div><span id="cuenta-segundos">00</span><small>seg</small></div>
+        </div>
+
+        <a class="boton home-boton-grande home-boton-blanco" href="../catalogo/index.html?q=laptop">Aprovechar oferta</a>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         POR QUÉ ELEGIRNOS
+         ==================================================================== -->
+    <section class="home-seccion">
+      <header class="home-seccion__cabecera home-revelar">
+        <span class="home-etiqueta">Por qué elegirnos</span>
+        <h2 class="home-seccion__titulo">Comprar tecnología no debería ser complicado</h2>
+      </header>
+
+      <div class="home-ventajas">
+        <article class="home-ventaja home-revelar">
+          <span class="home-ventaja__icono">🚀</span>
+          <h3>Envío express</h3>
+          <p>Recibe tu pedido en 24 a 48 horas con seguimiento en tiempo real desde "Mis Pedidos".</p>
+        </article>
+        <article class="home-ventaja home-revelar" style="--retraso:80ms">
+          <span class="home-ventaja__icono">🛡️</span>
+          <h3>Garantía oficial</h3>
+          <p>Todos los equipos son originales y cuentan con 12 meses de garantía del fabricante.</p>
+        </article>
+        <article class="home-ventaja home-revelar" style="--retraso:160ms">
+          <span class="home-ventaja__icono">🔐</span>
+          <h3>Cuenta protegida</h3>
+          <p>Inicio de sesión con código de verificación por correo: solo tú entras a tu cuenta.</p>
+        </article>
+        <article class="home-ventaja home-revelar" style="--retraso:240ms">
+          <span class="home-ventaja__icono">🧑‍💻</span>
+          <h3>Asesoría experta</h3>
+          <p>¿No sabes qué laptop elegir? Nuestro equipo técnico te ayuda a decidir sin compromiso.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TESTIMONIOS
+         ==================================================================== -->
+    <section class="home-seccion home-seccion--suave">
+      <header class="home-seccion__cabecera home-revelar">
+        <span class="home-etiqueta">Opiniones</span>
+        <h2 class="home-seccion__titulo">Lo que dicen nuestros clientes</h2>
+      </header>
+
+      <div class="home-testimonios">
+        <figure class="home-testimonio home-revelar">
+          <div class="home-testimonio__estrellas">★★★★★</div>
+          <blockquote>"La laptop llegó al día siguiente y perfectamente embalada. El rendimiento es increíble para edición de video."</blockquote>
+          <figcaption><span class="home-testimonio__avatar">CR</span>Carla R. · Diseñadora</figcaption>
+        </figure>
+        <figure class="home-testimonio home-revelar" style="--retraso:100ms">
+          <div class="home-testimonio__estrellas">★★★★★</div>
+          <blockquote>"Los audífonos con cancelación de ruido me cambiaron las clases en línea. Y el soporte respondió en minutos."</blockquote>
+          <figcaption><span class="home-testimonio__avatar">JM</span>Juan M. · Estudiante</figcaption>
+        </figure>
+        <figure class="home-testimonio home-revelar" style="--retraso:200ms">
+          <div class="home-testimonio__estrellas">★★★★☆</div>
+          <blockquote>"Buenos precios y el cupón de descuento funcionó al instante. Ya compré el mouse y la funda a juego."</blockquote>
+          <figcaption><span class="home-testimonio__avatar">LP</span>Luis P. · Desarrollador</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         NEWSLETTER
+         ==================================================================== -->
+    <section class="home-boletin home-revelar">
+      <div>
+        <h2>Entérate primero de los lanzamientos</h2>
+        <p>Ofertas exclusivas y novedades tech, una vez por semana. Sin spam.</p>
+      </div>
+      <form class="home-boletin__form" id="form-boletin" novalidate>
+        <input type="email" id="boletin-email" placeholder="tu@correo.com" aria-label="Correo electrónico" required>
+        <button class="boton home-boton-blanco" type="submit">Suscribirme</button>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="home-pie">
+    <div class="home-pie__marca">
+      <span class="navbar__logo-badge">E</span>
+      <div>
+        <strong>ECOMMERCE</strong>
+        <p>Tu tienda de tecnología de confianza.</p>
+      </div>
+    </div>
+    <nav class="home-pie__enlaces">
+      <a href="../catalogo/index.html">Catálogo</a>
+      <a href="../ordenes/index.html">Mis pedidos</a>
+      <a href="../perfil/index.html">Mi perfil</a>
+      <a href="../login/index.html">Ingresar</a>
+    </nav>
+    <p class="home-pie__legal">© 2026 ECOMMERCE · Proyecto académico</p>
+  </footer>
+
+  <script src="../shared/layout.js?v=9"></script>
+  <script src="home.js?v=1"></script>
+</body>
+</html>
