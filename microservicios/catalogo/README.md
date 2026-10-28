@@ -64,7 +64,7 @@ catalogo/
 
 | Campo         | Tipo   | Requerido | Notas               |
 |---------------|--------|-----------|---------------------|
-| `name`        | String | ✅        | Único               |
+| `name`        | String | ✅        | Único (sin distinguir mayúsculas ni tildes), máx. 60 |
 | `description` | String | ❌        | —                   |
 
 ### Product
@@ -79,6 +79,7 @@ catalogo/
 | `colors`      | [String]   | ❌        | Colores disponibles                  |
 | `details`     | [String]   | ❌        | Detalles adicionales                 |
 | `description` | String     | ❌        | Descripción larga                    |
+| `imagen`      | String     | ❌        | URL de la foto del producto          |
 
 ---
 
@@ -133,6 +134,23 @@ Base: `/categories` (o `/api/catalogo/categories` desde el gateway)
 | `POST`   | `/`     | Crear una categoría           | Admin          |
 | `PUT`    | `/:id`  | Actualizar una categoría      | Admin          |
 | `DELETE` | `/:id`  | Eliminar una categoría        | Admin          |
+
+- Crear o renombrar con un nombre que ya existe responde `409` (`"gaming"` choca con `"Gaming"` y `"Electronica"` con `"Electrónica"`).
+- No se puede eliminar una categoría que todavía tiene productos: responde `409` con cuántos tiene.
+- Al crear o editar un producto se comprueba que su `category` exista; si no, responde `400`.
+
+### Imágenes subidas
+
+Base: `/uploads` (o `/api/catalogo/uploads` desde el gateway)
+
+| Método | Ruta       | Descripción                                              | Auth requerida |
+|--------|------------|----------------------------------------------------------|----------------|
+| `POST` | `/`        | Sube una foto (cuerpo = el archivo en binario) -> `{ url }` | Admin          |
+| `GET`  | `/:archivo` | Devuelve la foto                                         | No             |
+
+- Acepta JPG, PNG o WebP de hasta 2 MB; el formato se comprueba por el contenido del archivo, no por su `Content-Type`.
+- Las fotos se guardan en el volumen Docker `catalogo-uploads` (carpeta `UPLOADS_DIR`). Son locales de cada máquina, igual que los datos de Mongo.
+- `product.imagen` acepta una URL `http(s)://` o una ruta `/api/catalogo/uploads/...` devuelta por esta ruta.
 
 ---
 

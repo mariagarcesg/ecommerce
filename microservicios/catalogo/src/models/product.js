@@ -9,7 +9,13 @@ const productSchema = new Schema(
         sizes: [String],
         colors: [String],
         details: [String],
-        description: String
+        description: String,
+        // URL externa (http/https) o una foto subida desde el panel (/api/catalogo/uploads/...)
+        imagen: {
+            type: String,
+            trim: true,
+            match: [/^(https?:\/\/|\/api\/catalogo\/uploads\/)/, 'La imagen debe ser una URL http(s) o una foto subida']
+        }
     }
 )
 

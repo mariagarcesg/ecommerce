@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 )
 
 const duracionToken = 2 * time.Hour
@@ -65,7 +67,25 @@ func (s *Servidor) validarToken(r *http.Request) (*Claims, error) {
 	if revocado > 0 {
 		return nil, errors.New("token revocado")
 	}
+
+	// Tokens emitidos antes de que el admin cambiara el rol, la contraseña o
+	// desactivara la cuenta ya no valen (ver invalidarSesiones).
+	desde, err := s.redis.Get(r.Context(), claveSesionesDesde(claims.Subject)).Int64()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return nil, err
+	}
+	if claims.IssuedAt == nil || claims.IssuedAt.Unix() < desde {
+		return nil, errors.New("sesión invalidada")
+	}
 	return claims, nil
 }
 
+// Invalida todas las sesiones abiertas de un usuario. Basta con recordar el
+// momento durante lo que dura un token: después ya vencieron solos.
+func (s *Servidor) invalidarSesiones(ctx context.Context, usuarioID int) error {
+	return s.redis.Set(ctx, claveSesionesDesde(strconv.Itoa(usuarioID)), time.Now().Unix(), duracionToken).Err()
+}
+
 func claveRevocado(jti string) string { return "token_revocado:" + jti }
+
+func claveSesionesDesde(usuarioID string) string { return "sesiones_desde:" + usuarioID }

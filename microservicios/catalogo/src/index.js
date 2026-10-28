@@ -6,6 +6,7 @@ import cors from 'cors';
 import connectDB from './config/db.js';
 import productsRouter from './routes/productRoutes.js';
 import categoriesRouter from './routes/categoriesRoutes.js';
+import uploadsRouter from './routes/uploadRoutes.js';
 
 // Fuera de Docker toma las variables del .env de la raíz del proyecto.
 // Dentro de Docker ese archivo no existe y las variables llegan desde docker-compose.yml.
@@ -28,6 +29,7 @@ app.get('/health', (req, res) => {
 });
 app.use('/products', productsRouter);
 app.use('/categories', categoriesRouter);
+app.use('/uploads', uploadsRouter);
 
 app.listen(PORT, () => {
   console.log(`Servicio de catálogo corriendo en puerto ${PORT}`);

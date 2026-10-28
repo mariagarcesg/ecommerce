@@ -14,6 +14,7 @@ import jwt
 
 CATALOGO_URL = os.getenv("CATALOGO_URL", "http://catalogo:3000")
 AUTH_URL = os.getenv("AUTH_URL", "http://auth:8081")
+ORDENES_URL = os.getenv("ORDENES_URL", "http://ordenes:8080")
 JWT_SECRET = os.getenv("JWT_SECRET", "")
 
 TIMEOUT_SEGUNDOS = 5
@@ -67,6 +68,28 @@ def obtener_productos() -> list[dict] | None:
 def obtener_usuarios() -> list[dict] | None:
     """Usuarios de auth sin contrasena: [{id, nombre, email, rol}] (GET /usuarios, solo admin)."""
     return _con_cache("usuarios", _consultar_usuarios)
+
+
+def obtener_ordenes() -> list[dict] | None:
+    """Ventas registradas en ordenes (GET /api/ordenes, solo admin).
+
+    Cada orden ya es una compra con el pago aprobado:
+    [{id, usuarioId, total, fechaCreacion, detalles: [{productoId, productoNombre, precioUnitario, cantidad}]}]
+    """
+    return _con_cache("ordenes", _consultar_ordenes)
+
+
+def _consultar_ordenes() -> list[dict] | None:
+    if not JWT_SECRET:
+        return None
+    try:
+        ordenes = _get_json(
+            f"{ORDENES_URL}/api/ordenes",
+            headers={"Authorization": f"Bearer {_token_servicio()}"},
+        )
+        return ordenes if isinstance(ordenes, list) else None
+    except Exception:
+        return None
 
 
 def _consultar_productos() -> list[dict] | None:

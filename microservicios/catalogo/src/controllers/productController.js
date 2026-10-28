@@ -1,4 +1,6 @@
+import { isValidObjectId } from 'mongoose';
 import Product from '../models/product.js';
+import Category from '../models/category.js';
 
 export const getProducts = async (req, res) => {
   try {
@@ -49,8 +51,19 @@ export const getProductById = async (req, res) => {
   }
 };
 
+// Mongoose no comprueba que la categoría referenciada exista: se valida aquí
+const categoriaInvalida = async (categoryId) => {
+  if (!isValidObjectId(categoryId)) return 'Selecciona una categoría válida';
+  if (!(await Category.exists({ _id: categoryId }))) return 'La categoría seleccionada no existe';
+  return null;
+};
+
 export const createProduct = async (req, res) => {
   try {
+    const errorCategoria = await categoriaInvalida(req.body.category);
+    if (errorCategoria) {
+      return res.status(400).json({ message: errorCategoria });
+    }
     const product = new Product(req.body);
     const savedProduct = await product.save();
     const populatedProduct = await savedProduct.populate('category');
@@ -62,6 +75,12 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
+    if (req.body.category !== undefined) {
+      const errorCategoria = await categoriaInvalida(req.body.category);
+      if (errorCategoria) {
+        return res.status(400).json({ message: errorCategoria });
+      }
+    }
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       req.body,

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Panel de Administración | ECOMMERCE</title>
-  <link rel="stylesheet" href="../shared/styles.css?v=6">
+  <link rel="stylesheet" href="../shared/styles.css?v=15">
 </head>
 <body>
 
@@ -12,13 +12,14 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
       <div>
         <h1 style="font-size:1.8rem;font-weight:900;color:var(--color-texto)">Panel de Control</h1>
-        <p style="color:var(--color-texto-suave);font-size:0.92rem">Gestión de Catálogo y Control de Órdenes de la Tienda.</p>
+        <p style="color:var(--color-texto-suave);font-size:0.92rem">Gestión de Catálogo, Órdenes y Usuarios de la Tienda.</p>
       </div>
 
       <!-- Selector de Pestañas -->
       <div style="display:flex;gap:8px;background:var(--color-blanco);padding:6px;border-radius:var(--radio);border:1px solid var(--color-borde)">
         <button class="chip chip--activo" id="tab-btn-catalogo" type="button">📦 Catálogo</button>
         <button class="chip" id="tab-btn-ordenes" type="button">💳 Órdenes</button>
+        <button class="chip" id="tab-btn-usuarios" type="button">👥 Usuarios</button>
         <button class="chip" id="tab-btn-analitica" type="button">📊 Analítica</button>
       </div>
     </div>
@@ -26,68 +27,147 @@
     <!-- ====================================================================
          PESTAÑA 1: GESTIÓN DE CATÁLOGO
          ==================================================================== -->
-    <section class="tarjeta-admin" id="panel-catalogo">
-      <div class="tarjeta-admin__cabecera">
-        <div>
-          <h2 style="font-size:1.25rem;font-weight:800">Inventario de Productos</h2>
-          <span style="font-size:0.85rem;color:var(--color-texto-suave)">Gestión y disponibilidad de inventario</span>
-        </div>
-        <button class="boton boton--sm" id="btn-toggle-nuevo-producto" type="button">+ Agregar Producto</button>
-      </div>
+    <div id="panel-catalogo">
 
-      <!-- Formulario para agregar producto nuevo (Oculto por defecto) -->
-      <form id="form-crear-producto" style="display:none;background:var(--color-fondo);padding:20px;border-radius:var(--radio);border:1px solid var(--color-borde);margin-bottom:24px">
-        <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:14px;color:var(--color-rojo-principal)">Nuevo Artículo de Catálogo</h3>
-        <div class="form-fila" style="margin-bottom:12px">
-          <div class="form-grupo">
-            <label for="adm-nombre">Nombre del Producto</label>
-            <input type="text" id="adm-nombre" required placeholder="Ej: Teclado Mecánico RGB Red">
+      <!-- Categorías: GET/POST/PUT/DELETE /api/catalogo/categories -->
+      <section class="tarjeta-admin">
+        <div class="tarjeta-admin__cabecera">
+          <div>
+            <h2 style="font-size:1.25rem;font-weight:800">Categorías</h2>
+            <span style="font-size:0.85rem;color:var(--color-texto-suave)">Organizan el catálogo; cada producto pertenece a una</span>
           </div>
-          <div class="form-grupo">
-            <label for="adm-categoria">Categoría</label>
-            <input type="text" id="adm-categoria" required placeholder="Ej: Electrónica / Accesorios">
-          </div>
+          <button class="boton boton--sm" id="btn-nueva-categoria" type="button">+ Nueva categoría</button>
         </div>
-        <div class="form-fila" style="margin-bottom:12px">
-          <div class="form-grupo">
-            <label for="adm-precio">Precio ($)</label>
-            <input type="number" id="adm-precio" step="0.01" min="0" required placeholder="Ej: 59.99">
-          </div>
-          <div class="form-grupo">
-            <label for="adm-stock">Stock Inicial (Uds.)</label>
-            <input type="number" id="adm-stock" min="0" required placeholder="Ej: 15">
-          </div>
-        </div>
-        <div class="form-grupo" style="margin-bottom:16px">
-          <label for="adm-descripcion">Descripción</label>
-          <textarea id="adm-descripcion" rows="2" placeholder="Detalles y características principales del producto..."></textarea>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button class="boton boton--sm" type="submit">Guardar en Catálogo</button>
-          <button class="boton boton--secundario boton--sm" type="button" onclick="document.getElementById('form-crear-producto').style.display='none'">Cancelar</button>
-        </div>
-      </form>
 
-      <!-- Tabla de Productos -->
-      <div style="overflow-x:auto">
-        <table class="tabla-admin">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Producto</th>
-              <th>Categoría</th>
-              <th>Precio</th>
-              <th>Stock</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-adm-productos-cuerpo">
-            <!-- Inyectado por admin.js -->
-          </tbody>
-        </table>
-      </div>
-    </section>
+        <form id="form-categoria" class="admin-form" hidden novalidate>
+          <h3 class="admin-form__titulo" id="form-categoria-titulo">Nueva categoría</h3>
+          <div class="form-fila">
+            <div class="form-grupo">
+              <label for="cat-nombre">Nombre</label>
+              <input type="text" id="cat-nombre" maxlength="60" required placeholder="Ej: Gaming">
+            </div>
+            <div class="form-grupo">
+              <label for="cat-descripcion">Descripción</label>
+              <input type="text" id="cat-descripcion" maxlength="200" placeholder="Ej: Consolas, controles y accesorios gamer">
+            </div>
+          </div>
+          <p class="admin-form__error" id="form-categoria-error" role="alert"></p>
+          <div class="admin-form__acciones">
+            <button class="boton boton--sm" type="submit">Guardar categoría</button>
+            <button class="boton boton--secundario boton--sm" type="button" data-cancelar>Cancelar</button>
+          </div>
+        </form>
+
+        <div style="overflow-x:auto">
+          <table class="tabla-admin">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Productos</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-adm-categorias-cuerpo">
+              <!-- Inyectado por admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Productos: GET/POST/PUT/DELETE /api/catalogo/products -->
+      <section class="tarjeta-admin">
+        <div class="tarjeta-admin__cabecera" style="flex-wrap:wrap;gap:12px">
+          <div>
+            <h2 style="font-size:1.25rem;font-weight:800">Inventario de Productos</h2>
+            <span style="font-size:0.85rem;color:var(--color-texto-suave)" id="productos-conteo">Gestión y disponibilidad de inventario</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input type="search" id="buscar-productos" class="admin-buscador" placeholder="Buscar producto o categoría" aria-label="Buscar productos">
+            <button class="boton boton--sm" id="btn-toggle-nuevo-producto" type="button">+ Agregar producto</button>
+          </div>
+        </div>
+
+        <form id="form-producto" class="admin-form" hidden novalidate>
+          <h3 class="admin-form__titulo" id="form-producto-titulo">Nuevo producto</h3>
+          <div class="form-fila">
+            <div class="form-grupo">
+              <label for="adm-nombre">Nombre del producto</label>
+              <input type="text" id="adm-nombre" maxlength="120" required placeholder="Ej: Teclado Mecánico RGB Red">
+            </div>
+            <div class="form-grupo">
+              <label for="adm-categoria">Categoría</label>
+              <select id="adm-categoria" required>
+                <option value="">Selecciona una categoría</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-fila">
+            <div class="form-grupo">
+              <label for="adm-precio">Precio ($)</label>
+              <input type="number" id="adm-precio" step="0.01" min="0" required placeholder="Ej: 59.99">
+            </div>
+            <div class="form-grupo">
+              <label for="adm-stock">Stock (uds.)</label>
+              <input type="number" id="adm-stock" step="1" min="0" required placeholder="Ej: 15">
+            </div>
+          </div>
+          <div class="admin-form__imagen">
+            <div class="form-grupo" style="flex:1">
+              <label for="adm-imagen">Imagen <small>(sube un archivo o pega la dirección de una imagen)</small></label>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="adm-imagen" style="flex:1;min-width:0" placeholder="https://... (clic derecho en la imagen → Copiar dirección de imagen)">
+                <label class="boton boton--secundario boton--sm admin-subir" for="adm-imagen-archivo">Subir imagen</label>
+                <input type="file" id="adm-imagen-archivo" accept="image/jpeg,image/png,image/webp" hidden>
+              </div>
+              <small class="admin-form__ayuda" id="adm-imagen-estado">JPG, PNG o WebP de hasta 2 MB.</small>
+            </div>
+            <img id="adm-imagen-vista" class="admin-miniatura admin-miniatura--grande" alt="Vista previa" hidden>
+          </div>
+          <div class="form-grupo">
+            <label for="adm-descripcion">Descripción</label>
+            <textarea id="adm-descripcion" rows="2" placeholder="Detalles y características principales del producto..."></textarea>
+          </div>
+          <div class="form-fila">
+            <div class="form-grupo">
+              <label for="adm-variantes">Variantes / tallas <small>(separadas por coma)</small></label>
+              <input type="text" id="adm-variantes" placeholder="Ej: 128GB, 256GB">
+            </div>
+            <div class="form-grupo">
+              <label for="adm-colores">Colores <small>(separados por coma)</small></label>
+              <input type="text" id="adm-colores" placeholder="Ej: Rojo, Blanco">
+            </div>
+          </div>
+          <div class="form-grupo">
+            <label for="adm-detalles">Características <small>(una por línea)</small></label>
+            <textarea id="adm-detalles" rows="3" placeholder="Pantalla AMOLED 6.7&quot;&#10;Batería 5000mAh"></textarea>
+          </div>
+          <p class="admin-form__error" id="form-producto-error" role="alert"></p>
+          <div class="admin-form__acciones">
+            <button class="boton boton--sm" type="submit">Guardar producto</button>
+            <button class="boton boton--secundario boton--sm" type="button" data-cancelar>Cancelar</button>
+          </div>
+        </form>
+
+        <div style="overflow-x:auto">
+          <table class="tabla-admin">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-adm-productos-cuerpo">
+              <!-- Inyectado por admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
 
     <!-- ====================================================================
          PESTAÑA 2: CONTROL DE ÓRDENES
@@ -121,6 +201,130 @@
     </section>
 
     <!-- ====================================================================
+         PESTAÑA: USUARIOS REGISTRADOS (solo admin)
+         ==================================================================== -->
+    <div id="panel-usuarios" style="display:none">
+    <section class="tarjeta-admin">
+      <div class="tarjeta-admin__cabecera">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:800">Usuarios Registrados</h2>
+          <span style="font-size:0.85rem;color:var(--color-texto-suave)">Cuentas creadas en la plataforma (microservicio de autenticación)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input type="search" id="buscar-usuarios" placeholder="Buscar por nombre o correo"
+                 aria-label="Buscar usuarios" style="padding:6px 10px;border:1px solid var(--color-borde);border-radius:var(--radio-sm);font:inherit;font-size:0.88rem">
+          <span class="badge-stock badge-stock--normal" id="conteo-total-usuarios" style="position:static">0 usuarios</span>
+          <button class="boton boton--sm" id="btn-nuevo-usuario" type="button">+ Nuevo usuario</button>
+        </div>
+      </div>
+
+      <!-- Crear / editar usuario: POST y PUT /api/auth/usuarios. El correo no se edita. -->
+      <form id="form-usuario" class="admin-form" hidden novalidate>
+        <h3 class="admin-form__titulo" id="form-usuario-titulo">Nuevo usuario</h3>
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label for="usr-nombre">Nombre</label>
+            <input type="text" id="usr-nombre" maxlength="100" required placeholder="Ej: Pedro Pérez">
+          </div>
+          <div class="form-grupo">
+            <label for="usr-email">Correo <small id="usr-email-nota">(no se puede cambiar después)</small></label>
+            <input type="email" id="usr-email" maxlength="255" required placeholder="tu@correo.com" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label for="usr-rol">Rol</label>
+            <select id="usr-rol">
+              <option value="cliente">Cliente</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label for="usr-password" id="usr-password-label">Contraseña temporal</label>
+            <input type="password" id="usr-password" minlength="8" maxlength="16" autocomplete="new-password" placeholder="8 a 16, con mayúscula, minúscula y número">
+            <small class="admin-form__ayuda">8 a 16 caracteres, con una mayúscula, una minúscula y un número.</small>
+          </div>
+        </div>
+        <div class="admin-form__checks" id="usr-estados" hidden>
+          <label><input type="checkbox" id="usr-activo"> Cuenta activa <small>(si la desactivas no puede iniciar sesión)</small></label>
+          <label><input type="checkbox" id="usr-verificado"> Correo verificado</label>
+        </div>
+        <p class="admin-form__error" id="form-usuario-error" role="alert"></p>
+        <div class="admin-form__acciones">
+          <button class="boton boton--sm" type="submit">Guardar usuario</button>
+          <button class="boton boton--secundario boton--sm" type="button" data-cancelar>Cancelar</button>
+        </div>
+      </form>
+
+      <div style="overflow-x:auto">
+        <table class="tabla-admin">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre de usuario</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th>Correo verificado</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-adm-usuarios-cuerpo">
+            <!-- Inyectado por admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Roles: GET/POST/PUT/DELETE /api/auth/roles (tabla roles de auth) -->
+    <section class="tarjeta-admin">
+      <div class="tarjeta-admin__cabecera">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:800">Roles</h2>
+          <span style="font-size:0.85rem;color:var(--color-texto-suave)">admin y cliente son los roles base. Un rol nuevo tiene los mismos permisos que cliente.</span>
+        </div>
+        <button class="boton boton--sm" id="btn-nuevo-rol" type="button">+ Nuevo rol</button>
+      </div>
+
+      <form id="form-rol" class="admin-form" hidden novalidate>
+        <h3 class="admin-form__titulo" id="form-rol-titulo">Nuevo rol</h3>
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label for="rol-nombre">Nombre <small>(minúsculas, sin espacios)</small></label>
+            <input type="text" id="rol-nombre" maxlength="20" required placeholder="Ej: vendedor">
+          </div>
+          <div class="form-grupo">
+            <label for="rol-descripcion">Descripción</label>
+            <input type="text" id="rol-descripcion" maxlength="200" placeholder="Ej: Atiende pedidos en tienda">
+          </div>
+        </div>
+        <p class="admin-form__error" id="form-rol-error" role="alert"></p>
+        <div class="admin-form__acciones">
+          <button class="boton boton--sm" type="submit">Guardar rol</button>
+          <button class="boton boton--secundario boton--sm" type="button" data-cancelar>Cancelar</button>
+        </div>
+      </form>
+
+      <div style="overflow-x:auto">
+        <table class="tabla-admin">
+          <thead>
+            <tr>
+              <th>Rol</th>
+              <th>Descripción</th>
+              <th>Usuarios</th>
+              <th>Tipo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-adm-roles-cuerpo">
+            <!-- Inyectado por admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+    </div>
+
+    <!-- ====================================================================
          PESTAÑA 3: ANALÍTICA Y ESTADÍSTICAS (OCULTO POR EL MOMENTO)
          ==================================================================== -->
     <section class="tarjeta-admin" id="panel-analitica" style="display:none">
@@ -130,12 +334,12 @@
             <span class="modulo-python__badge">Módulo Analítico</span>
             <h2 style="font-size:1.25rem;font-weight:800">Módulo de Analítica y Datos Históricos</h2>
           </div>
-          <span style="font-size:0.85rem;color:var(--color-texto-suave)" id="analitica-subtitulo">Productos y usuarios en tiempo real · ventas con datos simulados</span>
+          <span style="font-size:0.85rem;color:var(--color-texto-suave)" id="analitica-subtitulo">Solo datos reales de catálogo, usuarios y ventas</span>
         </div>
         <button class="boton boton--sm" id="btn-refrescar-analitica" type="button">🔄 Actualizar Métricas</button>
       </div>
 
-      <!-- KPI Cards en Paleta Rojo y Blanco -->
+      <!-- KPI Cards en Paleta Rojo y Blanco (GET /api/analitica/reportes) -->
       <div class="kpi-grilla">
         <div class="kpi-card">
           <div class="kpi-card__titulo">Productos Registrados</div>
@@ -146,35 +350,35 @@
           <div class="kpi-card__valor" id="kpi-usuarios">—</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card__titulo">Compras Realizadas</div>
-          <div class="kpi-card__valor" id="kpi-total-compras">—</div>
+          <div class="kpi-card__titulo">Último Producto Agregado</div>
+          <div class="kpi-producto" id="kpi-ultimo-producto">—</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card__titulo">Ingresos ($)</div>
-          <div class="kpi-card__valor" id="kpi-ingresos" style="color:var(--color-rojo-principal)">—</div>
+          <div class="kpi-card__titulo">Producto Más Vendido</div>
+          <div class="kpi-producto" id="kpi-mas-vendido">—</div>
         </div>
       </div>
 
-      <!-- Reporte de ventas por categoría y productos estrella -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <!-- Distribuciones con datos reales -->
+      <div class="analitica-graficos">
         <div style="background:var(--color-fondo);padding:18px;border-radius:var(--radio);border:1px solid var(--color-borde)">
-          <h3 style="font-size:1rem;font-weight:800;margin-bottom:12px;color:var(--color-texto)">Compras por Mes</h3>
-          <div style="display:flex;flex-direction:column;gap:10px" id="barras-categorias-analitica">
-            <!-- Barras sólidas rojas y blancas -->
+          <h3 style="font-size:1rem;font-weight:800;margin-bottom:12px;color:var(--color-texto)">Productos por Categoría</h3>
+          <div style="display:flex;flex-direction:column;gap:10px" id="barras-productos-categoria">
+            <!-- Inyectado por admin.js -->
           </div>
         </div>
 
         <div style="background:var(--color-fondo);padding:18px;border-radius:var(--radio);border:1px solid var(--color-borde)">
-          <h3 style="font-size:1rem;font-weight:800;margin-bottom:12px;color:var(--color-texto)">Productos Más Vendidos</h3>
-          <ul id="lista-top-productos" style="list-style:none;display:flex;flex-direction:column;gap:8px">
+          <h3 style="font-size:1rem;font-weight:800;margin-bottom:12px;color:var(--color-texto)">Usuarios Activos por Rol</h3>
+          <div style="display:flex;flex-direction:column;gap:10px" id="barras-usuarios-rol">
             <!-- Inyectado por admin.js -->
-          </ul>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="../shared/layout.js?v=6"></script>
-  <script src="admin.js?v=6"></script>
+  <script src="../shared/layout.js?v=18"></script>
+  <script src="admin.js?v=15"></script>
 </body>
 </html>

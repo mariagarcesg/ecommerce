@@ -10,3 +10,6 @@ bin/
 .idea/
 .vscode/
 *.log
+
+# Fotos subidas desde el panel admin al correr catalogo fuera de Docker
+microservicios/catalogo/uploads/
