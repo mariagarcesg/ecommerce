@@ -82,24 +82,96 @@ window.Sesion = (function () {
 })();
 
 // ---------- 2. Carrito de Compras (IDEA 05 & IDEA 09 - Cupones) ----------
+// El carrito es de cada cuenta y vive en el servidor (catalogo, /api/catalogo/carrito).
+// Se guarda una copia local por usuario solo para mostrarlo al instante al cargar.
 window.Carrito = (function () {
-  const CLAVE = 'ecommerce_carrito';
-  const CLAVE_CUPON = 'ecommerce_cupon';
+  const IMAGEN_POR_DEFECTO = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80';
+
+  // Cupones de la tienda: el descuento aplica solo a los productos de esa
+  // categoría (ordenes valida lo mismo al registrar la venta)
+  const CUPONES = {
+    PROFE20: { codigo: 'PROFE20', porcentaje: 20, categoria: 'Laptops', descripcion: '20% OFF en laptops' }
+  };
+  const normalizar = (texto) => String(texto || '').normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
 
   let items = [];
   let cupon = null;
 
+  // Versión anterior: un solo carrito para todo el navegador, compartido entre cuentas
+  try { ['ecommerce_carrito', 'ecommerce_cupon'].forEach(k => localStorage.removeItem(k)); } catch {}
+
+  const usuarioId = () => window.Sesion.usuario()?.id;
+  const claveLocal = () => `ecommerce_carrito_${usuarioId()}`;
+
   try {
-    items = JSON.parse(localStorage.getItem(CLAVE)) || [];
-    cupon = JSON.parse(localStorage.getItem(CLAVE_CUPON)) || null;
+    if (usuarioId()) {
+      const guardado = JSON.parse(localStorage.getItem(claveLocal())) || {};
+      items = guardado.items || [];
+      cupon = CUPONES[guardado.cupon] || null;
+    }
   } catch { items = []; cupon = null; }
 
-  function persistir() {
+  const aplicaCupon = (it, c = cupon) => !!c && normalizar(it.categoria) === normalizar(c.categoria);
+  if (cupon && !items.some(it => aplicaCupon(it))) cupon = null;
+
+  // Producto del catálogo + cantidad -> ítem del carrito
+  const aItem = (p, cantidad) => ({
+    id: p._id || p.id,
+    nombre: p.name || p.nombre,
+    precio: Number(p.price ?? p.precio),
+    imagen: p.imagen || IMAGEN_POR_DEFECTO,
+    // El catálogo trae la categoría poblada ({name}) o ya como texto
+    categoria: p.category?.name || p.category || p.categoria || '',
+    stock: p.stock !== undefined ? p.stock : 999,
+    cantidad
+  });
+
+  // Los cambios se envían al servidor agrupados (varios clics seguidos = un PUT)
+  let envioPendiente = null;
+  function guardarEnServidor() {
+    clearTimeout(envioPendiente);
+    envioPendiente = setTimeout(() => {
+      const token = window.Sesion.token();
+      if (!token) return;
+      fetch('/api/catalogo/carrito', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          items: items.map(it => ({ productoId: String(it.id), cantidad: it.cantidad })),
+          cupon: cupon?.codigo || null
+        })
+      }).then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }).catch(() => {
+        window.Notificaciones?.toast('No se pudo guardar tu carrito. Revisa tu conexión.', 'alerta');
+      });
+    }, 400);
+  }
+
+  function persistir({ sincronizar = true } = {}) {
+    // Si ya no queda ningún producto al que aplique el cupón, se quita solo
+    if (cupon && !items.some(it => aplicaCupon(it))) {
+      window.Notificaciones?.toast(`Se quitó el cupón ${cupon.codigo}: ya no hay productos de ${cupon.categoria} en el carrito.`, 'info');
+      cupon = null;
+    }
     try {
-      localStorage.setItem(CLAVE, JSON.stringify(items));
-      localStorage.setItem(CLAVE_CUPON, JSON.stringify(cupon));
+      if (usuarioId()) localStorage.setItem(claveLocal(), JSON.stringify({ items, cupon: cupon?.codigo || null }));
     } catch (e) { console.warn(e); }
     window.dispatchEvent(new CustomEvent('carrito-actualizado', { detail: { items, cupon } }));
+    if (sincronizar) guardarEnServidor();
+  }
+
+  // Al cargar cualquier página con sesión se trae el carrito real de la cuenta
+  // (con precios y stock actuales del catálogo)
+  if (window.Sesion.token()) {
+    fetch('/api/catalogo/carrito', { headers: { Authorization: `Bearer ${window.Sesion.token()}` } })
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then(datos => {
+        items = (datos.items || []).map(it => aItem(it.producto, it.cantidad));
+        cupon = CUPONES[datos.cupon] || null;
+        persistir({ sincronizar: false });
+      })
+      .catch(() => {});
   }
 
   return {
@@ -109,15 +181,25 @@ window.Carrito = (function () {
       return items.reduce((acc, it) => acc + (Number(it.precio) * (it.cantidad || 1)), 0);
     },
     obtenerCupon() { return cupon; },
+    // Solo sobre los productos de la categoría del cupón, redondeado a centavos como en ordenes
     descuento() {
       if (!cupon) return 0;
-      return (this.subtotal() * (cupon.porcentaje / 100));
+      const base = items.filter(it => aplicaCupon(it)).reduce((acc, it) => acc + Number(it.precio) * (it.cantidad || 1), 0);
+      return Math.round(base * cupon.porcentaje) / 100;
     },
     total() {
       const t = this.subtotal() - this.descuento();
       return t > 0 ? t : 0;
     },
+    // Comprar es por cuenta: sin sesión se manda al login con un aviso. Devuelve true si hay sesión.
+    exigirSesion() {
+      if (window.Sesion.token()) return true;
+      try { sessionStorage.setItem('avisoPendiente', '¡Regístrate o inicia sesión para armar tu carrito de compras!'); } catch {}
+      window.location.href = '../login/index.html';
+      return false;
+    },
     agregar(prod, cant = 1) {
+      if (!this.exigirSesion()) return false;
       const idx = items.findIndex(it => String(it.id) === String(prod.id || prod._id));
       const disponible = prod.stock !== undefined ? prod.stock : 999;
       if (disponible <= 0) {
@@ -132,14 +214,7 @@ window.Carrito = (function () {
           items[idx].cantidad += cant;
         }
       } else {
-        items.push({
-          id: prod.id || prod._id,
-          nombre: prod.name || prod.nombre,
-          precio: Number(prod.price || prod.precio),
-          imagen: prod.imagen || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80',
-          stock: disponible,
-          cantidad: Math.min(cant, disponible)
-        });
+        items.push(aItem(prod, Math.min(cant, disponible)));
       }
       persistir();
       window.Notificaciones.toast(`"${prod.name || prod.nombre}" agregado al carrito.`, 'exito');
@@ -162,15 +237,17 @@ window.Carrito = (function () {
       window.Notificaciones.toast('Producto retirado del carrito.', 'info');
     },
     aplicarCupon(codigo) {
-      const cod = String(codigo || '').trim().toUpperCase();
-      if (cod === 'PROFE20') {
-        cupon = { codigo: 'PROFE20', porcentaje: 20, descripcion: '20% OFF Especial' };
-        persistir();
-        window.Notificaciones.toast('¡Cupón PROFE20 aplicado! 20% de descuento.', 'exito');
-        return { ok: true, cupon };
-      } else {
-        return { ok: false, error: 'Cupón no válido o expirado. Prueba con PROFE20' };
+      const nuevo = CUPONES[String(codigo || '').trim().toUpperCase()];
+      if (!nuevo) {
+        return { ok: false, error: 'Cupón no válido o expirado. Prueba con PROFE20 en laptops.' };
       }
+      if (!items.some(it => aplicaCupon(it, nuevo))) {
+        return { ok: false, error: `El cupón ${nuevo.codigo} solo aplica a ${nuevo.categoria.toLowerCase()}. Agrega una al carrito.` };
+      }
+      cupon = nuevo;
+      persistir();
+      window.Notificaciones.toast(`¡Cupón ${cupon.codigo} aplicado! ${cupon.porcentaje}% de descuento en ${cupon.categoria.toLowerCase()}.`, 'exito');
+      return { ok: true, cupon };
     },
     quitarCupon() {
       cupon = null;
@@ -186,15 +263,48 @@ window.Carrito = (function () {
 })();
 
 // ---------- 3. Lista de Deseos / Favoritos (IDEA 10) ----------
+// La lista es de cada cuenta y vive en el servidor (catalogo, /api/catalogo/favoritos).
+// Se guarda una copia local por usuario solo para mostrarla al instante al cargar.
 window.Favoritos = (function () {
-  const CLAVE = 'ecommerce_favoritos';
+  const IMAGEN_POR_DEFECTO = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80';
   let items = [];
 
-  try { items = JSON.parse(localStorage.getItem(CLAVE)) || []; } catch { items = []; }
+  // Versión anterior: una sola lista para todo el navegador, compartida entre cuentas
+  try { localStorage.removeItem('ecommerce_favoritos'); } catch {}
+
+  const usuarioId = () => window.Sesion.usuario()?.id;
+  const claveLocal = () => `ecommerce_favoritos_${usuarioId()}`;
+
+  try { if (usuarioId()) items = JSON.parse(localStorage.getItem(claveLocal())) || []; } catch { items = []; }
 
   function persistir() {
-    try { localStorage.setItem(CLAVE, JSON.stringify(items)); } catch (e) { console.warn(e); }
+    try { if (usuarioId()) localStorage.setItem(claveLocal(), JSON.stringify(items)); } catch (e) { console.warn(e); }
     window.dispatchEvent(new CustomEvent('favoritos-actualizado', { detail: { items } }));
+  }
+
+  // Producto del catálogo -> ítem de la lista
+  const aItem = (p) => ({
+    id: p._id || p.id,
+    nombre: p.name || p.nombre,
+    precio: Number(p.price ?? p.precio),
+    imagen: p.imagen || IMAGEN_POR_DEFECTO,
+    categoria: p.category?.name || p.category || p.categoria || '',
+    stock: p.stock
+  });
+
+  async function api(metodo, productoId = '') {
+    const res = await fetch(`/api/catalogo/favoritos/${productoId}`, {
+      method: metodo,
+      headers: { Authorization: `Bearer ${window.Sesion.token()}` }
+    });
+    const datos = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(datos.message || datos.error || `Error ${res.status}`);
+    return datos.map(aItem);
+  }
+
+  // Al cargar cualquier página con sesión se trae la lista real de la cuenta
+  if (window.Sesion.token()) {
+    api('GET').then((lista) => { items = lista; persistir(); }).catch(() => {});
   }
 
   return {
@@ -203,26 +313,36 @@ window.Favoritos = (function () {
     esFavorito(id) {
       return items.some(it => String(it.id) === String(id));
     },
+    // La lista de deseos es de cada cuenta: sin sesión se manda al login con un aviso.
+    // Devuelve true si hay sesión.
+    exigirSesion() {
+      if (window.Sesion.token()) return true;
+      try { sessionStorage.setItem('avisoPendiente', '¡Regístrate o inicia sesión para armar tu lista de deseos!'); } catch {}
+      window.location.href = '../login/index.html';
+      return false;
+    },
+    // Se marca/desmarca al instante y se guarda en el servidor; si falla, se revierte
     toggle(prod) {
+      if (!this.exigirSesion()) return false;
       const id = prod.id || prod._id;
-      const idx = items.findIndex(it => String(it.id) === String(id));
-      if (idx >= 0) {
-        items.splice(idx, 1);
-        persistir();
-        window.Notificaciones.toast(`"${prod.name || prod.nombre}" eliminado de favoritos.`, 'info');
-        return false;
-      } else {
-        items.push({
-          id,
-          nombre: prod.name || prod.nombre,
-          precio: Number(prod.price || prod.precio),
-          imagen: prod.imagen || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80',
-          stock: prod.stock
+      const nombre = prod.name || prod.nombre;
+      const anterior = [...items];
+      const quitar = items.some(it => String(it.id) === String(id));
+
+      items = quitar ? items.filter(it => String(it.id) !== String(id)) : [...items, aItem(prod)];
+      persistir();
+      window.Notificaciones.toast(quitar
+        ? `"${nombre}" eliminado de favoritos.`
+        : `"${nombre}" guardado en lista de deseos ❤️`, quitar ? 'info' : 'exito');
+
+      api(quitar ? 'DELETE' : 'PUT', id)
+        .then((lista) => { items = lista; persistir(); })
+        .catch((err) => {
+          items = anterior;
+          persistir();
+          window.Notificaciones.toast(`No se pudo actualizar tu lista de deseos: ${err.message}`, 'alerta');
         });
-        persistir();
-        window.Notificaciones.toast(`"${prod.name || prod.nombre}" guardado en lista de deseos ❤️`, 'exito');
-        return true;
-      }
+      return !quitar;
     }
   };
 })();
@@ -282,7 +402,7 @@ window.Notificaciones = (function () {
   const banner = document.createElement('aside');
   banner.className = 'banner-promo';
   banner.innerHTML = `
-    🔥 ¡Gran Inauguración! Usa el cupón <span class="banner-promo__codigo" id="btn-copiar-cupon" title="Clic para copiar">PROFE20</span> para 20% OFF en toda la tienda.
+    🔥 ¡Gran Inauguración! Usa el cupón <span class="banner-promo__codigo" id="btn-copiar-cupon" title="Clic para copiar">PROFE20</span> para 20% OFF en laptops.
   `;
   document.body.prepend(banner);
 
@@ -373,7 +493,7 @@ window.Notificaciones = (function () {
     <div class="drawer__cuerpo" id="carrito-items-lista"></div>
     <div class="drawer__pie">
       <div class="seccion-cupon">
-        <input type="text" id="input-cupon" placeholder="Código de cupón (ej: PROFE20)">
+        <input type="text" id="input-cupon" placeholder="Cupón (PROFE20: 20% en laptops)">
         <button class="boton boton--secundario boton--sm" id="btn-aplicar-cupon" type="button">Aplicar</button>
       </div>
       <div id="cupon-aplicado-banner"></div>
@@ -539,11 +659,11 @@ window.Notificaciones = (function () {
     const bannerCupon = document.getElementById('cupon-aplicado-banner');
     if (cupon) {
       filaDesc.hidden = false;
-      document.getElementById('txt-cupon-desc').textContent = `${cupon.porcentaje}%`;
+      document.getElementById('txt-cupon-desc').textContent = `${cupon.porcentaje}% en ${cupon.categoria.toLowerCase()}`;
       document.getElementById('resumen-descuento').textContent = `-$${desc.toFixed(2)}`;
       bannerCupon.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;background:var(--color-rojo-suave);padding:6px 10px;border-radius:var(--radio-sm);font-size:0.82rem;font-weight:700;color:var(--color-rojo-profundo)">
-          <span>🏷️ Cupón: ${cupon.codigo} (-${cupon.porcentaje}%)</span>
+          <span>🏷️ Cupón: ${cupon.codigo} (-${cupon.porcentaje}% en ${cupon.categoria.toLowerCase()})</span>
           <button type="button" onclick="Carrito.quitarCupon()" style="background:none;border:none;cursor:pointer;color:var(--color-rojo-principal)">Quitar</button>
         </div>
       `;
@@ -572,7 +692,7 @@ window.Notificaciones = (function () {
           <div class="item-carrito__info">
             <h4 class="item-carrito__nombre">${it.nombre}</h4>
             <div class="item-carrito__precio">$${it.precio.toFixed(2)}</div>
-            <button class="boton boton--secundario boton--sm" style="margin-top:6px" onclick="Carrito.agregar({id:'${it.id}',nombre:'${it.nombre}',precio:${it.precio},imagen:'${it.imagen}'})">Mover al Carrito</button>
+            <button class="boton boton--secundario boton--sm" style="margin-top:6px" onclick="Carrito.agregar({id:'${it.id}',nombre:'${it.nombre}',precio:${it.precio},imagen:'${it.imagen}',categoria:'${it.categoria || ''}'})">Mover al Carrito</button>
           </div>
           <button class="item-carrito__eliminar" onclick="Favoritos.toggle({id:'${it.id}',nombre:'${it.nombre}'})" title="Quitar">${iconoCerrar}</button>
         </div>
@@ -595,9 +715,13 @@ window.Notificaciones = (function () {
   }
 
   // Event Listeners
-  document.getElementById('btn-abrir-carrito')?.addEventListener('click', () => abrirDrawer('drawer-carrito'));
+  document.getElementById('btn-abrir-carrito')?.addEventListener('click', () => {
+    if (window.Carrito.exigirSesion()) abrirDrawer('drawer-carrito');
+  });
   document.getElementById('btn-cerrar-carrito')?.addEventListener('click', cerrarDrawers);
-  document.getElementById('btn-abrir-favoritos')?.addEventListener('click', () => abrirDrawer('drawer-favoritos'));
+  document.getElementById('btn-abrir-favoritos')?.addEventListener('click', () => {
+    if (window.Favoritos.exigirSesion()) abrirDrawer('drawer-favoritos');
+  });
   document.getElementById('btn-cerrar-favoritos')?.addEventListener('click', cerrarDrawers);
   backdrop.addEventListener('click', cerrarDrawers);
   document.getElementById('btn-cerrar-modal-pago')?.addEventListener('click', cerrarDrawers);
@@ -891,8 +1015,34 @@ window.Notificaciones = (function () {
       } catch {}
     }
     window.Sesion.cerrar();
-    window.Notificaciones.toast('Sesión cerrada correctamente.', 'info');
+    // Al salir se vuelve al Home como visitante: páginas como Mi Perfil o el
+    // panel admin seguirían mostrando datos de la sesión. El aviso se muestra
+    // al llegar al Home.
+    try { sessionStorage.setItem('avisoPendiente', 'Sesión cerrada correctamente.'); } catch {}
+    window.location.href = '../home/index.html';
   });
+
+  // Páginas que solo tienen sentido con sesión: sin ella se vuelve al Home.
+  // Cubre entrar sin sesión, volver con "Atrás" tras salir (caché del navegador)
+  // y cerrar sesión en otra pestaña.
+  const PAGINAS_PRIVADAS = ['perfil', 'ordenes', 'admin'];
+  function salirSiNoHaySesion() {
+    if (!PAGINAS_PRIVADAS.includes(carpetaActual) || window.Sesion.token()) return;
+    try { sessionStorage.setItem('avisoPendiente', 'Tu sesión se cerró. Inicia sesión para continuar.'); } catch {}
+    window.location.replace('../home/index.html');
+  }
+  salirSiNoHaySesion();
+  window.addEventListener('pageshow', (e) => { if (e.persisted) salirSiNoHaySesion(); });
+  window.addEventListener('storage', (e) => { if (e.key === 'token' || e.key === null) salirSiNoHaySesion(); });
+
+  // Aviso que dejó la página anterior antes de redirigir (por ejemplo, al cerrar sesión)
+  try {
+    const aviso = sessionStorage.getItem('avisoPendiente');
+    if (aviso) {
+      sessionStorage.removeItem('avisoPendiente');
+      window.Notificaciones.toast(aviso, 'info');
+    }
+  } catch {}
 
   // Buscador global
   document.getElementById('form-buscador-global')?.addEventListener('submit', (e) => {

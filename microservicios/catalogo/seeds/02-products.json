@@ -28,7 +28,7 @@
     "name": "Laptop Pro Ultradelgada 16\"",
     "price": 1299.00,
     "stock": 8,
-    "category": { "$oid": "671600000000000000000101" },
+    "category": { "$oid": "671600000000000000000106" },
     "sizes": ["16GB RAM / 512GB SSD", "32GB RAM / 1TB SSD"],
     "colors": ["Blanco Titanio", "Gris Espacial"],
     "details": ["Procesador 12 núcleos", "Pantalla 3K Liquid Retina", "Batería 18h"],

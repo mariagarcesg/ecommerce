@@ -139,6 +139,30 @@ Base: `/categories` (o `/api/catalogo/categories` desde el gateway)
 - No se puede eliminar una categoría que todavía tiene productos: responde `409` con cuántos tiene.
 - Al crear o editar un producto se comprueba que su `category` exista; si no, responde `400`.
 
+### Lista de deseos
+
+Base: `/favoritos` (o `/api/catalogo/favoritos` desde el gateway). Todas exigen sesión y usan el usuario del token: cada cuenta solo ve y modifica su propia lista (colección `favoritos`, un documento por usuario).
+
+| Método   | Ruta           | Descripción                                   |
+|----------|----------------|-----------------------------------------------|
+| `GET`    | `/`            | Productos de la lista (con su categoría)      |
+| `PUT`    | `/:productoId` | Agrega el producto (no se repite) -> la lista |
+| `DELETE` | `/:productoId` | Quita el producto -> la lista                 |
+
+Los productos que se borran del catálogo dejan de aparecer en las listas.
+
+### Carrito de compras
+
+Base: `/carrito` (o `/api/catalogo/carrito` desde el gateway). Exige sesión y usa el usuario del token: cada cuenta tiene su propio carrito (colección `carritos`, un documento por usuario).
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET`  | `/`  | `{items: [{producto (con categoría), cantidad}], cupon}` |
+| `PUT`  | `/`  | Reemplaza el carrito: `{items: [{productoId, cantidad}], cupon}` -> el carrito guardado |
+
+- Se suman las cantidades repetidas, se descartan productos inexistentes y la cantidad se limita a 1..99 (el stock se valida al pagar, en ordenes).
+- El cupón se guarda como código; ordenes lo vuelve a validar al registrar la venta.
+
 ### Imágenes subidas
 
 Base: `/uploads` (o `/api/catalogo/uploads` desde el gateway)

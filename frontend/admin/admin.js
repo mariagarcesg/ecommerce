@@ -4,8 +4,9 @@
 
 (function () {
   // Solo el rol admin puede ver este panel (el backend además valida el token en cada API)
+  // Sin sesión, layout.js ya redirige al Home (páginas privadas)
   if (!window.Sesion.esAdmin()) {
-    window.location.replace(window.Sesion.usuario() ? '../catalogo/index.html' : '../login/index.html');
+    if (window.Sesion.usuario()) window.location.replace('../home/index.html');
     return;
   }
 

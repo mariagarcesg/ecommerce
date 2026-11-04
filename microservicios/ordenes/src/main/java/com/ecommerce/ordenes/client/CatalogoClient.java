@@ -21,7 +21,7 @@ import java.util.Map;
 @Component
 public class CatalogoClient {
 
-    public record Producto(String id, String nombre, BigDecimal precio, int stock) {}
+    public record Producto(String id, String nombre, BigDecimal precio, int stock, String categoria) {}
 
     private final String catalogoUrl;
     private final JwtService jwtService;
@@ -43,7 +43,9 @@ public class CatalogoClient {
         if (res.statusCode() != 200) throw catalogoNoDisponible();
         try {
             JsonNode p = mapper.readTree(res.body());
-            return new Producto(productoId, p.path("name").asText(), p.path("price").decimalValue(), p.path("stock").asInt());
+            // GET /products/{id} trae la categoría poblada: {_id, name}
+            return new Producto(productoId, p.path("name").asText(), p.path("price").decimalValue(),
+                    p.path("stock").asInt(), p.path("category").path("name").asText(""));
         } catch (Exception e) {
             throw catalogoNoDisponible();
         }

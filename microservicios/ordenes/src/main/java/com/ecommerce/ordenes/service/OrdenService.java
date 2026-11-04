@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,8 +26,10 @@ public class OrdenService {
 
     private static final Logger log = LoggerFactory.getLogger(OrdenService.class);
 
-    // Cupones que acepta la tienda (los mismos que ofrece el carrito)
-    private static final Map<String, Integer> CUPONES = Map.of("PROFE20", 20);
+    // Cupones que acepta la tienda (los mismos que ofrece el carrito): el
+    // porcentaje se aplica solo a los productos de esa categoría del catálogo
+    private record Cupon(int porcentaje, String categoria) {}
+    private static final Map<String, Cupon> CUPONES = Map.of("PROFE20", new Cupon(20, "Laptops"));
 
     @Autowired
     private OrdenRepository ordenRepository;
@@ -61,6 +64,21 @@ public class OrdenService {
             productos.add(p);
         }
 
+        // El cupón se valida antes de tocar el stock
+        Cupon cupon = null;
+        String codigoCupon = datos.cupon() == null || datos.cupon().isBlank() ? null : datos.cupon().trim().toUpperCase();
+        if (codigoCupon != null) {
+            cupon = CUPONES.get(codigoCupon);
+            if (cupon == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El cupón " + codigoCupon + " no es válido.");
+            }
+            Cupon aplicable = cupon;
+            if (productos.stream().noneMatch(p -> esDeCategoria(p, aplicable.categoria()))) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "El cupón " + codigoCupon + " solo aplica a productos de la categoría " + cupon.categoria() + ".");
+            }
+        }
+
         // Descuento de stock; catálogo lo hace atómico y rechaza si no alcanza
         Map<String, Integer> descontados = new LinkedHashMap<>();
         try {
@@ -73,15 +91,15 @@ public class OrdenService {
                 descontados.put(p.id(), cantidad);
             }
             // saveAndFlush: si la BD falla, el error ocurre aquí y el stock se devuelve
-            return ordenRepository.saveAndFlush(armarOrden(usuarioId, datos, productos, cantidades));
+            return ordenRepository.saveAndFlush(armarOrden(usuarioId, datos, productos, cantidades, codigoCupon, cupon));
         } catch (RuntimeException e) {
             devolverStock(descontados);
             throw e;
         }
     }
 
-    private Orden armarOrden(long usuarioId, CrearOrdenRequest datos,
-                             List<CatalogoClient.Producto> productos, Map<String, Integer> cantidades) {
+    private Orden armarOrden(long usuarioId, CrearOrdenRequest datos, List<CatalogoClient.Producto> productos,
+                             Map<String, Integer> cantidades, String codigoCupon, Cupon cupon) {
         Orden orden = new Orden();
         orden.setUsuarioId(usuarioId);
         orden.setEstado(Orden.ESTADO_PAGADA);
@@ -92,21 +110,32 @@ public class OrdenService {
         orden.setTarjetaUltimos4(datos.tarjetaUltimos4());
 
         BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal conDescuento = BigDecimal.ZERO; // suma de las líneas a las que aplica el cupón
         for (var p : productos) {
             int cantidad = cantidades.get(p.id());
+            BigDecimal linea = p.precio().multiply(BigDecimal.valueOf(cantidad));
             orden.agregarDetalle(new DetalleOrden(p.id(), p.nombre(), p.precio(), cantidad));
-            subtotal = subtotal.add(p.precio().multiply(BigDecimal.valueOf(cantidad)));
+            subtotal = subtotal.add(linea);
+            if (cupon != null && esDeCategoria(p, cupon.categoria())) conDescuento = conDescuento.add(linea);
         }
 
-        String cupon = datos.cupon() == null ? null : datos.cupon().trim().toUpperCase();
         BigDecimal descuento = BigDecimal.ZERO;
-        if (cupon != null && CUPONES.containsKey(cupon)) {
-            orden.setCupon(cupon);
-            descuento = subtotal.multiply(BigDecimal.valueOf(CUPONES.get(cupon))).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        if (cupon != null) {
+            orden.setCupon(codigoCupon);
+            descuento = conDescuento.multiply(BigDecimal.valueOf(cupon.porcentaje())).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         }
         orden.setDescuento(descuento);
         orden.setTotal(subtotal.subtract(descuento).setScale(2, RoundingMode.HALF_UP));
         return orden;
+    }
+
+    // Compara nombres de categoría sin distinguir mayúsculas ni tildes (como catálogo)
+    private static boolean esDeCategoria(CatalogoClient.Producto p, String categoria) {
+        return sinTildes(p.categoria()).equalsIgnoreCase(sinTildes(categoria));
+    }
+
+    private static String sinTildes(String texto) {
+        return Normalizer.normalize(texto == null ? "" : texto.trim(), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
     }
 
     // Compensación: si la venta no se completa, catálogo recupera las unidades
