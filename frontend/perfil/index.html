@@ -5,48 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mi Perfil | ECOMMERCE</title>
   <link rel="stylesheet" href="../shared/styles.css?v=15">
+  <link rel="stylesheet" href="perfil.css?v=4">
 </head>
 <body>
-  <main class="contenido-principal" style="display:grid;place-items:center;min-height:75vh">
-    <section class="perfil" id="perfil" style="border-top:5px solid var(--color-rojo-principal)" hidden>
-      <div class="avatar avatar--grande" id="perfil-avatar" aria-hidden="true"></div>
-      <h1 class="perfil__nombre" id="perfil-nombre"></h1>
-      <span class="badge-stock badge-stock--critico" id="perfil-rol" style="position:static"></span>
+  <main class="mi-perfil" id="perfil" hidden>
 
-      <dl class="perfil__datos">
-        <div class="perfil__dato">
-          <dt>Nombre</dt>
-          <dd id="dato-nombre"></dd>
+    <!-- Cabecera con el usuario de la sesión (GET /api/auth/me) -->
+    <section class="perfil-cabecera">
+      <div class="perfil-cabecera__fondo" aria-hidden="true"></div>
+      <div class="perfil-cabecera__contenido">
+        <div class="perfil-avatar" id="perfil-avatar" aria-hidden="true"></div>
+        <div class="perfil-cabecera__texto">
+          <span class="perfil-saludo" id="perfil-saludo">Hola</span>
+          <h1 class="perfil-cabecera__nombre" id="perfil-nombre"></h1>
+          <div class="perfil-cabecera__meta">
+            <span id="perfil-email"></span>
+            <span class="perfil-rol" id="perfil-rol"></span>
+          </div>
         </div>
-        <div class="perfil__dato">
-          <dt>Correo electrónico</dt>
-          <dd id="dato-email"></dd>
+        <div class="perfil-cabecera__acciones">
+          <a class="boton perfil-boton-claro" href="../catalogo/index.html">Seguir comprando</a>
+          <a class="boton boton--secundario perfil-boton-borde" id="perfil-panel-admin" href="../admin/index.html" hidden>Panel de administración</a>
         </div>
-        <div class="perfil__dato">
-          <dt>Rol de Acceso</dt>
-          <dd id="dato-rol"></dd>
-        </div>
-        <div class="perfil__dato">
-          <dt>Identificador (ID)</dt>
-          <dd id="dato-id"></dd>
-        </div>
-      </dl>
-
-      <div style="display:flex;gap:10px;width:100%;margin-top:20px">
-        <a class="boton boton--secundario boton--sm" style="flex:1" href="../ordenes/index.html">Mis Pedidos</a>
-        <a class="boton boton--sm" style="flex:1" href="../catalogo/index.html">Ir a Comprar</a>
       </div>
     </section>
 
-    <div id="perfil-error" hidden style="text-align:center;padding:40px;background:var(--color-blanco);border-radius:var(--radio-lg);border:1px solid var(--color-borde)">
-      <p style="font-size:2rem;margin-bottom:8px">🔒</p>
-      <h3 style="font-weight:800;color:var(--color-texto)">Debes iniciar sesión</h3>
-      <p style="color:var(--color-texto-suave);margin-top:4px">Para ver tu perfil de usuario, ingresa a tu cuenta.</p>
-      <a class="boton boton--sm" style="margin-top:16px" href="../login/index.html">Iniciar Sesión</a>
+    <!-- Resumen de la cuenta -->
+    <section class="perfil-resumen">
+      <article class="perfil-kpi">
+        <span class="perfil-kpi__icono">📦</span>
+        <div>
+          <span class="perfil-kpi__valor" id="kpi-pedidos">—</span>
+          <span class="perfil-kpi__titulo">Pedidos realizados</span>
+        </div>
+      </article>
+      <article class="perfil-kpi">
+        <span class="perfil-kpi__icono">💳</span>
+        <div>
+          <span class="perfil-kpi__valor" id="kpi-gastado">—</span>
+          <span class="perfil-kpi__titulo">Total en compras</span>
+        </div>
+      </article>
+      <article class="perfil-kpi">
+        <span class="perfil-kpi__icono">❤️</span>
+        <div>
+          <span class="perfil-kpi__valor" id="kpi-favoritos">—</span>
+          <span class="perfil-kpi__titulo">En tu lista de deseos</span>
+        </div>
+      </article>
+    </section>
+
+    <div class="perfil-grilla">
+      <div class="perfil-columna">
+        <!-- Últimos pedidos (GET /api/ordenes/mias) -->
+        <section class="perfil-tarjeta perfil-tarjeta--ancha">
+          <header class="perfil-tarjeta__cabecera">
+            <h2>Últimos pedidos</h2>
+            <a href="../ordenes/index.html">Ver todos →</a>
+          </header>
+          <ul class="perfil-pedidos" id="perfil-pedidos">
+            <li class="perfil-vacio">Cargando tus pedidos...</li>
+          </ul>
+        </section>
+
+        <!-- Lista de deseos (window.Favoritos) -->
+        <section class="perfil-tarjeta perfil-tarjeta--ancha">
+          <header class="perfil-tarjeta__cabecera">
+            <h2>Tu lista de deseos</h2>
+            <button class="perfil-enlace" type="button" id="perfil-ver-favoritos">Ver lista completa →</button>
+          </header>
+          <div class="perfil-favoritos" id="perfil-favoritos"></div>
+        </section>
+      </div>
+
+      <div class="perfil-columna">
+        <!-- Datos de la cuenta -->
+        <section class="perfil-tarjeta">
+          <header class="perfil-tarjeta__cabecera">
+            <h2>Datos de la cuenta</h2>
+          </header>
+          <dl class="perfil-datos">
+            <div><dt>Nombre</dt><dd id="dato-nombre"></dd></div>
+            <div><dt>Correo electrónico</dt><dd id="dato-email"></dd></div>
+            <div><dt>Tipo de cuenta</dt><dd id="dato-rol"></dd></div>
+            <div><dt>N.º de cliente</dt><dd id="dato-id"></dd></div>
+          </dl>
+          <div class="perfil-seguridad">
+            <span class="perfil-seguridad__icono">🔐</span>
+            <div>
+              <strong>Cuenta protegida</strong>
+              <p>Cada inicio de sesión se confirma con un código enviado a tu correo.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Accesos rápidos -->
+        <section class="perfil-tarjeta">
+          <header class="perfil-tarjeta__cabecera">
+            <h2>Accesos rápidos</h2>
+          </header>
+          <nav class="perfil-accesos">
+            <a href="../ordenes/index.html"><span>📦</span>Mis pedidos</a>
+            <a href="../catalogo/index.html"><span>🛍️</span>Catálogo</a>
+            <a href="../home/index.html"><span>🏠</span>Inicio</a>
+            <a href="../catalogo/index.html?q=laptop"><span>💻</span>Laptops con 20% OFF</a>
+          </nav>
+        </section>
+      </div>
     </div>
   </main>
 
-  <script src="../shared/layout.js?v=18"></script>
-  <script src="perfil.js?v=6"></script>
+  <script src="../shared/layout.js?v=24"></script>
+  <script src="perfil.js?v=7"></script>
 </body>
 </html>

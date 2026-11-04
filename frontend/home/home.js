@@ -12,12 +12,12 @@
 
   // Productos tecnológicos del seed del catálogo, por si la API no responde
   const RESPALDO = [
-    { id: '671600000000000000000003', name: 'Laptop Pro Ultradelgada 16"', price: 1299.00, stock: 8, category: 'Electrónica', details: ['Procesador 12 núcleos'], imagen: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80' },
+    { id: '671600000000000000000003', name: 'Laptop Pro Ultradelgada 16"', price: 1299.00, stock: 8, category: 'Laptops', details: ['Procesador 12 núcleos'], imagen: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80' },
     { id: '671600000000000000000001', name: 'Smartphone Crimson Pro 256GB', price: 799.99, stock: 3, category: 'Electrónica', details: ['Pantalla AMOLED 6.7" 120Hz'], imagen: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&q=80' },
     { id: '671600000000000000000008', name: 'Audífonos Inalámbricos Noise Cancelling', price: 149.99, stock: 12, category: 'Electrónica', details: ['Cancelación activa de ruido'], imagen: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80' },
     { id: '671600000000000000000004', name: 'Mouse Ergonómico Inalámbrico Silent', price: 39.99, stock: 19, category: 'Accesorios', details: ['Sensor óptico 4000 DPI'], imagen: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&q=80' },
   ];
-  const CATEGORIAS_TECH = ['Electrónica', 'Accesorios'];
+  const CATEGORIAS_TECH = ['Laptops', 'Electrónica', 'Accesorios'];
   const MAX_DESTACADOS = 4;
 
   const contenedor = document.getElementById('home-destacados');

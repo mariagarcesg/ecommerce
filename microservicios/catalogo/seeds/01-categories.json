@@ -23,5 +23,10 @@
     "_id": { "$oid": "671600000000000000000105" },
     "name": "Hogar",
     "description": "Electrodomésticos y café de especialidad"
+  },
+  {
+    "_id": { "$oid": "671600000000000000000106" },
+    "name": "Laptops",
+    "description": "Laptops y ultrabooks (aplica el cupón PROFE20)"
   }
 ]
